@@ -10,7 +10,29 @@ A production-ready Kubernetes cluster setup for greenfield projects and startups
 
 See [Security Configuration Guide](docs/SECURITY.md) for instructions on properly configuring secrets.
 
+## 📚 Documentation
+
+**[View Full Documentation →](https://ianlintner.github.io/green_field_cluster/)**
+
+Comprehensive documentation with:
+- Getting started guides
+- Deployment tutorials
+- Architecture diagrams
+- Component details
+- Security best practices
+
 ## 🚀 Quick Start
+
+### As a Template (Recommended)
+
+Create your own project from this template:
+
+```bash
+gh repo create my-project --template ianlintner/green_field_cluster --private --clone
+cd my-project
+```
+
+### Clone Directly
 
 ```bash
 # Clone the repository
@@ -28,6 +50,30 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 
 ### Infrastructure Components
 - ✅ **Redis** - Master-replica setup with persistence
+- ✅ **PostgreSQL** - Multi-instance cluster for HA
+- ✅ **MySQL** - Multi-instance cluster with replication
+- ✅ **MongoDB** - Replica set configuration
+- ✅ **Kafka** - Distributed messaging with Zookeeper
+- ✅ **Istio** - Service mesh for traffic management
+
+### Observability Stack
+- ✅ **OpenTelemetry Collector** - Centralized telemetry
+- ✅ **Jaeger** - Distributed tracing
+- ✅ **Prometheus** - Metrics collection
+- ✅ **Grafana** - Dashboards and visualization
+
+### Security
+- ✅ **Sealed Secrets** - Encrypted Kubernetes secrets
+
+### DevOps & Automation
+- ✅ **GitHub Actions CI** - Automated manifest validation
+- ✅ **Quality Gates** - Kustomize, Helm, YAML linting
+- ✅ **Security Scanning** - Trivy vulnerability checks
+- ✅ **Auto-deployed Docs** - MkDocs on GitHub Pages
+- ✅ **Copilot Integration** - AI-assisted customization
+
+### Example Application
+- ✅ **FastAPI App** - Fully instrumented with OTel and Prometheus metrics
 - ✅ **PostgreSQL** - Multi-instance cluster for HA
 - ✅ **MySQL** - Multi-instance cluster with replication
 - ✅ **MongoDB** - Replica set configuration
