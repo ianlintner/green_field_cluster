@@ -1,0 +1,21 @@
+apiVersion: v2
+name: greenfield-cluster
+description: A complete Kubernetes cluster setup for greenfield projects with databases, messaging, observability, and example applications
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - kubernetes
+  - redis
+  - postgres
+  - mysql
+  - mongodb
+  - kafka
+  - istio
+  - prometheus
+  - grafana
+  - opentelemetry
+  - fastapi
+maintainers:
+  - name: Greenfield Team
+    email: team@example.com

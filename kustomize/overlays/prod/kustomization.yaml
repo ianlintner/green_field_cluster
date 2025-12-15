@@ -1,0 +1,43 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+nameSuffix: -prod
+
+# Production-specific configurations
+replicas:
+  - name: redis-replica
+    count: 3
+  - name: postgres
+    count: 3
+  - name: mysql
+    count: 3
+  - name: mongodb
+    count: 3
+  - name: zookeeper
+    count: 3
+  - name: kafka
+    count: 3
+  - name: otel-collector
+    count: 3
+  - name: prometheus
+    count: 2
+  - name: grafana
+    count: 2
+  - name: fastapi-app
+    count: 3
+
+# Production patches for higher resources
+patches:
+  - target:
+      kind: Deployment
+      name: fastapi-app
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 1000m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 1Gi

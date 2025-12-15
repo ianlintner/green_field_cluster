@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-script
+  namespace: greenfield
+data:
+  init.sql: |
+    -- Create initial database schema
+    CREATE TABLE IF NOT EXISTS health_check (
+      id SERIAL PRIMARY KEY,
+      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status VARCHAR(50)
+    );
+    
+    -- Insert initial data
+    INSERT INTO health_check (status) VALUES ('initialized');

@@ -1,0 +1,208 @@
+# Default values for greenfield-cluster
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: greenfield
+
+# Redis configuration
+redis:
+  enabled: true
+  master:
+    replicas: 1
+  replica:
+    replicas: 2
+  image:
+    repository: redis
+    tag: 7.2-alpine
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    size: 1Gi
+
+# PostgreSQL configuration
+postgres:
+  enabled: true
+  replicas: 3
+  image:
+    repository: postgres
+    tag: 16-alpine
+  database: greenfield
+  username: postgres
+  password: changeme123
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  persistence:
+    size: 5Gi
+
+# MySQL configuration
+mysql:
+  enabled: true
+  replicas: 3
+  image:
+    repository: mysql
+    tag: "8.0"
+  database: greenfield
+  username: mysql
+  rootPassword: rootpass123
+  password: changeme123
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  persistence:
+    size: 5Gi
+
+# MongoDB configuration
+mongodb:
+  enabled: true
+  replicas: 3
+  image:
+    repository: mongo
+    tag: "7.0"
+  database: greenfield
+  username: admin
+  password: changeme123
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  persistence:
+    data:
+      size: 5Gi
+    config:
+      size: 1Gi
+
+# Kafka configuration
+kafka:
+  enabled: true
+  replicas: 3
+  zookeeper:
+    replicas: 3
+    image:
+      repository: confluentinc/cp-zookeeper
+      tag: 7.5.0
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    persistence:
+      data:
+        size: 2Gi
+      log:
+        size: 1Gi
+  image:
+    repository: confluentinc/cp-kafka
+    tag: 7.5.0
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+  persistence:
+    size: 10Gi
+
+# OpenTelemetry Collector configuration
+otelCollector:
+  enabled: true
+  replicas: 2
+  image:
+    repository: otel/opentelemetry-collector-contrib
+    tag: 0.91.0
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Jaeger configuration
+jaeger:
+  enabled: true
+  image:
+    repository: jaegertracing/all-in-one
+    tag: "1.52"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# Prometheus configuration
+prometheus:
+  enabled: true
+  replicas: 1
+  image:
+    repository: prom/prometheus
+    tag: v2.48.0
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+# Grafana configuration
+grafana:
+  enabled: true
+  replicas: 1
+  image:
+    repository: grafana/grafana
+    tag: 10.2.2
+  adminPassword: admin123
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# FastAPI example app configuration
+fastapi:
+  enabled: true
+  replicas: 2
+  image:
+    repository: fastapi-example
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# Istio configuration
+istio:
+  enabled: true
+  # Istio should be installed separately using Istio operator or Helm chart
+  # This flag controls whether to enable Istio injection for the namespace
+
+# Storage class to use for persistent volumes
+storageClass: ""
