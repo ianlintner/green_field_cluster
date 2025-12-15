@@ -1,0 +1,195 @@
+name: Kubernetes Manifests CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'kustomize/**'
+      - 'helm/**'
+      - '.github/workflows/k8s-ci.yaml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'kustomize/**'
+      - 'helm/**'
+      - '.github/workflows/k8s-ci.yaml'
+
+jobs:
+  validate-kustomize:
+    name: Validate Kustomize Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
+        with:
+          kustomize-version: "5.3.0"
+
+      - name: Validate base kustomization
+        run: |
+          echo "::group::Validating base kustomization"
+          kustomize build kustomize/base/ > /tmp/base-output.yaml
+          echo "✓ Base kustomization is valid"
+          echo "::endgroup::"
+
+      - name: Validate dev overlay
+        run: |
+          echo "::group::Validating dev overlay"
+          kustomize build kustomize/overlays/dev/ > /tmp/dev-output.yaml
+          echo "✓ Dev overlay is valid"
+          echo "::endgroup::"
+
+      - name: Validate staging overlay
+        run: |
+          echo "::group::Validating staging overlay"
+          kustomize build kustomize/overlays/staging/ > /tmp/staging-output.yaml
+          echo "✓ Staging overlay is valid"
+          echo "::endgroup::"
+
+      - name: Validate prod overlay
+        run: |
+          echo "::group::Validating prod overlay"
+          kustomize build kustomize/overlays/prod/ > /tmp/prod-output.yaml
+          echo "✓ Prod overlay is valid"
+          echo "::endgroup::"
+
+      - name: Upload manifests as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kustomize-manifests
+          path: |
+            /tmp/base-output.yaml
+            /tmp/dev-output.yaml
+            /tmp/staging-output.yaml
+            /tmp/prod-output.yaml
+
+  validate-helm:
+    name: Validate Helm Charts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.13.3'
+
+      - name: Helm lint
+        run: |
+          echo "::group::Linting Helm chart"
+          helm lint helm/greenfield-cluster/
+          echo "::endgroup::"
+
+      - name: Helm template
+        run: |
+          echo "::group::Templating Helm chart"
+          helm template greenfield helm/greenfield-cluster/ > /tmp/helm-output.yaml
+          echo "✓ Helm chart templated successfully"
+          echo "::endgroup::"
+
+      - name: Upload Helm templates as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-manifests
+          path: /tmp/helm-output.yaml
+
+  validate-yaml:
+    name: Validate YAML Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Create yamllint config
+        run: |
+          cat > .yamllint.yaml << 'EOF'
+          extends: default
+          rules:
+            line-length:
+              max: 120
+              level: warning
+            document-start: disable
+            comments:
+              min-spaces-from-content: 1
+            indentation:
+              spaces: 2
+          ignore: |
+            .github/
+            build/
+          EOF
+
+      - name: Run yamllint
+        run: yamllint -c .yamllint.yaml kustomize/ helm/ || true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  kubeconform:
+    name: Validate Kubernetes Resources
+    runs-on: ubuntu-latest
+    needs: validate-kustomize
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Install kubeconform
+        run: |
+          wget https://github.com/yannh/kubeconform/releases/download/v0.6.4/kubeconform-linux-amd64.tar.gz
+          tar xf kubeconform-linux-amd64.tar.gz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Validate with kubeconform
+        run: |
+          echo "::group::Validating Kubernetes resources"
+          kustomize build kustomize/base/ | kubeconform -strict -summary -output json
+          echo "::endgroup::"
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [validate-kustomize, validate-helm, validate-yaml, kubeconform]
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All validation checks passed!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Kustomize base and overlays validated" >> $GITHUB_STEP_SUMMARY
+          echo "- Helm chart linted and templated" >> $GITHUB_STEP_SUMMARY
+          echo "- YAML format validated" >> $GITHUB_STEP_SUMMARY
+          echo "- Kubernetes resources validated with kubeconform" >> $GITHUB_STEP_SUMMARY

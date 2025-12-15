@@ -1,0 +1,3 @@
+# Sealed Secrets
+
+Documentation coming soon...
