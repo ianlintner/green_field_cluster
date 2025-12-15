@@ -2,6 +2,14 @@
 
 A production-ready Kubernetes cluster setup for greenfield projects and startups with comprehensive infrastructure, observability, and security features.
 
+## ⚠️ SECURITY WARNING
+
+**This repository contains DEFAULT PASSWORDS for demonstration purposes only.**
+
+**DO NOT use these passwords in production!** All default passwords must be changed before deploying to any non-development environment.
+
+See [Security Configuration Guide](docs/SECURITY.md) for instructions on properly configuring secrets.
+
 ## 🚀 Quick Start
 
 ```bash

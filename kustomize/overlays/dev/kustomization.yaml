@@ -31,11 +31,3 @@ replicas:
   - name: fastapi-app
     count: 1
 
-# Patch resources for dev (lower limits)
-patches:
-  - target:
-      kind: StatefulSet
-    patch: |-
-      - op: replace
-        path: /spec/volumeClaimTemplates/0/spec/resources/requests/storage
-        value: 1Gi

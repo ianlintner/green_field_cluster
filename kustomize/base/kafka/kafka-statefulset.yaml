@@ -24,6 +24,8 @@ spec:
               name: external
           env:
             - name: KAFKA_BROKER_ID
+              value: "0"
+            - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
