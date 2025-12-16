@@ -2,6 +2,14 @@
 
 This directory contains the configuration for cert-manager, which automates the management and issuance of TLS certificates.
 
+## ⚠️ Important: Update Email Address
+
+**Before deploying to any environment, you MUST update the email address in:**
+- `cluster-issuer-letsencrypt-staging.yaml`
+- `cluster-issuer-letsencrypt-prod.yaml`
+
+The email address is used for Let's Encrypt notifications about certificate expiration and account issues.
+
 ## Installation
 
 cert-manager should be installed as a cluster-wide component before applying the ClusterIssuer configurations.

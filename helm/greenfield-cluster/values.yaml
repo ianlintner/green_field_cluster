@@ -224,7 +224,8 @@ certManager:
   # This flag controls whether to create ClusterIssuers
   
   # Email for Let's Encrypt notifications
-  email: "admin@example.com"
+  # ⚠️ IMPORTANT: Replace with your actual email address before deployment
+  email: "admin@example.com"  # TODO: CHANGE THIS!
   
   # Let's Encrypt staging issuer (for testing)
   staging:
