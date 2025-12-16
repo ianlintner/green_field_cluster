@@ -222,6 +222,106 @@ spec:
           number: 8000
 ```
 
+## Mutual TLS (mTLS)
+
+This cluster has STRICT mTLS enabled for all service-to-service communication, providing:
+- **Encryption in transit** - All traffic between services is encrypted
+- **Mutual authentication** - Both client and server verify each other's identity
+- **Zero application changes** - Istio sidecars handle everything transparently
+- **Automatic certificate management** - Istio manages certificate rotation
+
+### Current Configuration
+
+**Automatic Sidecar Injection:**
+The `greenfield` namespace has the `istio-injection: enabled` label, which automatically injects Istio sidecars into all pods.
+
+```bash
+# Verify namespace label
+kubectl get namespace greenfield -o yaml | grep istio-injection
+# Output: istio-injection: enabled
+```
+
+**PeerAuthentication Policies:**
+STRICT mTLS is enforced in both `greenfield` and `istio-system` namespaces:
+
+```yaml
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: greenfield
+spec:
+  mtls:
+    mode: STRICT
+```
+
+**DestinationRules:**
+Client-side mTLS traffic policies are configured:
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: default-mtls
+  namespace: greenfield
+spec:
+  host: "*.greenfield.svc.cluster.local"
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+```
+
+### Workloads with mTLS
+
+All workloads in the `greenfield` namespace automatically get Istio sidecars and use mTLS:
+
+**Applications:**
+- FastAPI app (2 replicas)
+- Jaeger (1 replica)
+- OTel Collector (2 replicas)
+- Grafana (1 replica)
+- Prometheus (1 replica)
+
+**Databases:**
+- MySQL (3 replicas)
+- PostgreSQL (3 replicas)
+- MongoDB (3 replicas)
+- Redis Master + Replicas (3 replicas total)
+- Kafka + Zookeeper (6 replicas total)
+
+### Verify mTLS
+
+```bash
+# Check PeerAuthentication policies
+kubectl get peerauthentication -A
+
+# Check DestinationRules
+kubectl get destinationrule -A
+
+# Verify a pod has Istio sidecar
+kubectl get pod <pod-name> -n greenfield -o jsonpath='{.spec.containers[*].name}'
+# Should show: <app-container> istio-proxy
+
+# Check mTLS status for a service (requires istioctl)
+istioctl authn tls-check <pod-name>.greenfield <service>.greenfield.svc.cluster.local
+```
+
+### Disabling Injection (if needed)
+
+To disable sidecar injection for a specific workload:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+```
+
 ## Examples
 
 The configuration includes example files:
@@ -377,10 +477,27 @@ istioctl proxy-config routes deploy/istio-ingressgateway -n istio-system
 ## Best Practices
 
 ### Security
-- Use separate gateways for external and internal traffic
-- Enable mTLS for internal services
-- Use cert-manager for certificate automation
-- Regularly update Istio to latest stable version
+- ✅ **Implemented**: Separate gateways for external and internal traffic
+- ✅ **Implemented**: STRICT mTLS enabled for all services in greenfield and istio-system namespaces
+- ✅ **Implemented**: Automatic sidecar injection enabled for greenfield namespace
+- ✅ **Implemented**: DestinationRules configured for mTLS traffic policy
+- 🔧 **Configure**: cert-manager for certificate automation
+- 🔧 **Maintain**: Regularly update Istio to latest stable version
+
+**Current mTLS Configuration:**
+```yaml
+# STRICT mTLS enforced via PeerAuthentication
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: greenfield
+spec:
+  mtls:
+    mode: STRICT
+```
+
+See [kustomize/base/istio/README.md](../../kustomize/base/istio/README.md) for detailed mTLS setup.
 
 ### Performance
 - Configure appropriate resource limits for gateways

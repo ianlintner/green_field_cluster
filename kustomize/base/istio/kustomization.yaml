@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
   - istio-config.yaml
   - gateways.yaml
+  - peer-authentication.yaml
+  - destination-rule.yaml
   # Uncomment the following lines to deploy example configurations
   # - virtualservices-example.yaml
   # - certificates-example.yaml
