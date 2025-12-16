@@ -1,10 +1,14 @@
 # Makefile for Greenfield Cluster
 
-.PHONY: help validate build-kustomize build-base build-dev build-staging build-prod deploy-dev deploy-staging deploy-prod clean test
+.PHONY: help validate build-kustomize build-base build-dev build-staging build-prod deploy-dev deploy-staging deploy-prod clean test install-prerequisites install-cert-issuers
 
 # Default target
 help:
 	@echo "Greenfield Cluster - Makefile Commands"
+	@echo ""
+	@echo "Installation:"
+	@echo "  make install-prerequisites - Install cert-manager, Istio, and sealed-secrets"
+	@echo "  make install-cert-issuers  - Install cert-manager ClusterIssuers (update emails first!)"
 	@echo ""
 	@echo "Validation:"
 	@echo "  make validate           - Validate all Kubernetes manifests"
@@ -151,12 +155,29 @@ install-prerequisites:
 	@kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager || true
 	@kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager || true
 	@kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager || true
-	@echo "Installing cert-manager ClusterIssuers..."
-	@echo "IMPORTANT: Update email addresses in kustomize/base/cert-manager/cluster-issuer-*.yaml before applying"
-	@kubectl apply -k kustomize/base/cert-manager/
 	@echo "Installing Istio..."
 	@curl -L https://istio.io/downloadIstio | sh -
 	@cd istio-* && export PATH=$$PWD/bin:$$PATH && istioctl install --set profile=default -y
 	@echo "Installing Sealed Secrets..."
 	@kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.24.5/controller.yaml
 	@echo "✓ Prerequisites installed"
+	@echo ""
+	@echo "⚠️  IMPORTANT: Before installing ClusterIssuers, update email addresses in:"
+	@echo "   - kustomize/base/cert-manager/cluster-issuer-letsencrypt-staging.yaml"
+	@echo "   - kustomize/base/cert-manager/cluster-issuer-letsencrypt-prod.yaml"
+	@echo ""
+	@echo "Then run: make install-cert-issuers"
+
+# Install cert-manager ClusterIssuers (after updating email addresses)
+install-cert-issuers:
+	@echo "Installing cert-manager ClusterIssuers..."
+	@echo "⚠️  Ensure you have updated email addresses in the ClusterIssuer files!"
+	@read -p "Have you updated the email addresses? (y/n) " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		kubectl apply -k kustomize/base/cert-manager/; \
+		echo "✓ ClusterIssuers installed"; \
+	else \
+		echo "❌ Installation cancelled. Please update email addresses first."; \
+		exit 1; \
+	fi
