@@ -203,9 +203,18 @@ metadata:
 
 ### Use Service Mesh for mTLS
 
-Istio provides automatic mutual TLS between services. Ensure it's enabled:
+Istio provides automatic mutual TLS between services. This cluster has mTLS enabled with STRICT mode:
+
+**Current Configuration:**
+- ✅ **Namespace injection enabled**: `greenfield` namespace has `istio-injection: enabled` label
+- ✅ **STRICT mTLS enforced**: All services in `greenfield` and `istio-system` namespaces require mTLS
+- ✅ **Automatic sidecar injection**: All pods receive Istio sidecars automatically
+- ✅ **Transparent encryption**: No application code changes needed
+
+The following policies are configured:
 
 ```yaml
+# PeerAuthentication for greenfield namespace
 apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
 metadata:
@@ -214,7 +223,37 @@ metadata:
 spec:
   mtls:
     mode: STRICT
+---
+# DestinationRule for client-side mTLS
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: default-mtls
+  namespace: greenfield
+spec:
+  host: "*.greenfield.svc.cluster.local"
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
 ```
+
+**Verify mTLS is enabled:**
+
+```bash
+# Check namespace injection label
+kubectl get namespace greenfield -o yaml | grep istio-injection
+
+# Verify PeerAuthentication policies
+kubectl get peerauthentication -A
+
+# Check if pods have Istio sidecars
+kubectl get pods -n greenfield
+
+# Verify mTLS for a specific service
+istioctl authn tls-check <pod-name>.greenfield <service-name>.greenfield.svc.cluster.local
+```
+
+See [kustomize/base/istio/README.md](../kustomize/base/istio/README.md) for detailed mTLS configuration.
 
 ### Scan Images for Vulnerabilities
 
@@ -250,7 +289,8 @@ Before deploying to production:
 - [ ] Kubernetes secrets encryption at rest enabled
 - [ ] RBAC policies configured for least-privilege access
 - [ ] Network policies implemented
-- [ ] Istio mTLS enabled
+- [x] Istio mTLS enabled with STRICT mode for all services
+- [x] Automatic Istio sidecar injection enabled for greenfield namespace
 - [ ] Container images scanned for vulnerabilities
 - [ ] Pod security standards enforced
 - [ ] Audit logging enabled
