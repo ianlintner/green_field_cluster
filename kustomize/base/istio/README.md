@@ -105,6 +105,55 @@ To use the examples:
 kubectl apply -f virtualservices-example.yaml
 ```
 
+## Mutual TLS (mTLS) Configuration
+
+This configuration includes PeerAuthentication policies to enforce STRICT mutual TLS between all services in the mesh:
+
+### PeerAuthentication Policies
+
+Two PeerAuthentication policies are configured:
+
+1. **Greenfield Namespace Policy** (`peer-authentication.yaml`)
+   - Enforces STRICT mTLS for all services in the `greenfield` namespace
+   - All service-to-service communication within the namespace requires mutual TLS
+
+2. **Istio System Namespace Policy** (`peer-authentication.yaml`)
+   - Enforces STRICT mTLS for all services in the `istio-system` namespace
+   - Ensures control plane components also use mTLS
+
+### DestinationRule for mTLS
+
+DestinationRules (`destination-rule.yaml`) configure client-side traffic policies:
+
+1. **Greenfield Namespace Rule**
+   - Applies to all services (`*.greenfield.svc.cluster.local`)
+   - Uses `ISTIO_MUTUAL` TLS mode for automatic mTLS certificate management
+
+2. **Istio System Namespace Rule**
+   - Applies to all services (`*.istio-system.svc.cluster.local`)
+   - Uses `ISTIO_MUTUAL` TLS mode
+
+### Sidecar Injection
+
+The `greenfield` namespace has the `istio-injection: enabled` label, which means:
+- All pods created in the namespace automatically get an Istio sidecar proxy injected
+- The sidecar handles mTLS encryption/decryption transparently
+- No application code changes are required
+
+To manually control sidecar injection for specific workloads, add annotations:
+
+```yaml
+# Enable injection for specific pod
+metadata:
+  annotations:
+    sidecar.istio.io/inject: "true"
+
+# Disable injection for specific pod
+metadata:
+  annotations:
+    sidecar.istio.io/inject: "false"
+```
+
 ## Verification
 
 ```bash
@@ -122,6 +171,15 @@ kubectl get gateway -n istio-system
 
 # Check VirtualService resources
 kubectl get virtualservice -A
+
+# Verify PeerAuthentication policies
+kubectl get peerauthentication -A
+
+# Check DestinationRules
+kubectl get destinationrule -A
+
+# Verify mTLS is enabled for a service
+istioctl authn tls-check <pod-name>.<namespace> <service-name>.<namespace>.svc.cluster.local
 ```
 
 ## Testing SSL/TLS
@@ -161,4 +219,7 @@ kubectl describe gateway internal-gateway -n istio-system
 - **DNS Configuration**: Ensure your domain's DNS points to the LoadBalancer IP
 - **Certificate Secrets**: Must be in the `istio-system` namespace
 - **HTTP to HTTPS Redirect**: Uncomment the `httpsRedirect` option in gateways.yaml to enable
+- **mTLS Enforcement**: PeerAuthentication policies enforce STRICT mTLS for all services in greenfield and istio-system namespaces
+- **Automatic Sidecar Injection**: All pods in the greenfield namespace automatically receive Istio sidecars due to the namespace label
+- **Zero Application Changes**: Applications don't need code changes for mTLS - the Istio sidecar handles encryption transparently
 
