@@ -2,6 +2,18 @@
 
 This guide provides step-by-step instructions for deploying the Greenfield Cluster to various environments.
 
+## 🚀 Quick Start with Infrastructure Examples
+
+**NEW**: Ready-to-use Terraform configurations and scripts are available in the [`infrastructure/`](../infrastructure/) directory for quickly bootstrapping Kubernetes clusters on:
+
+- **AWS EKS** (with ARM Graviton support)
+- **Azure AKS** (with ARM Ampere Altra support)
+- **GCP GKE** (with ARM Tau T2A support)
+- **DigitalOcean Kubernetes**
+- **On-Premises** (kubeadm, k3s, RKE2, OpenStack Magnum)
+
+See the [Infrastructure README](../infrastructure/README.md) for minimal cluster setup examples.
+
 ## Table of Contents
 
 1. [Pre-deployment Checklist](#pre-deployment-checklist)
@@ -59,8 +71,20 @@ kubectl apply -k kustomize/overlays/dev/
 
 ### 1. Create EKS Cluster
 
+**Option A: Using Terraform (Recommended)**
+
+See the complete [AWS Infrastructure Guide](../infrastructure/aws/README.md) with ARM Graviton support:
+
 ```bash
-# Using eksctl
+cd infrastructure/aws/
+terraform init
+terraform apply
+aws eks update-kubeconfig --region us-west-2 --name greenfield-cluster
+```
+
+**Option B: Using eksctl**
+
+```bash
 eksctl create cluster \
   --name greenfield-cluster \
   --region us-west-2 \
@@ -70,9 +94,6 @@ eksctl create cluster \
   --nodes-min 3 \
   --nodes-max 6 \
   --managed
-
-# Or using Terraform
-# See infrastructure-as-code examples
 ```
 
 ### 2. Configure Storage
@@ -178,6 +199,19 @@ EOF
 
 ### 1. Create GKE Cluster
 
+**Option A: Using Terraform (Recommended)**
+
+See the complete [GCP Infrastructure Guide](../infrastructure/gcp/README.md) with ARM Tau T2A support:
+
+```bash
+cd infrastructure/gcp/
+terraform init
+terraform apply
+gcloud container clusters get-credentials greenfield-cluster --zone us-central1-a
+```
+
+**Option B: Using gcloud CLI**
+
 ```bash
 # Create cluster
 gcloud container clusters create greenfield-cluster \
@@ -253,6 +287,19 @@ kubectl apply -k kustomize/overlays/prod/
 ## Azure AKS Deployment
 
 ### 1. Create AKS Cluster
+
+**Option A: Using Terraform (Recommended)**
+
+See the complete [Azure Infrastructure Guide](../infrastructure/azure/README.md) with ARM Ampere Altra support:
+
+```bash
+cd infrastructure/azure/
+terraform init
+terraform apply
+az aks get-credentials --resource-group greenfield-cluster-rg --name greenfield-cluster
+```
+
+**Option B: Using Azure CLI**
 
 ```bash
 # Create resource group
