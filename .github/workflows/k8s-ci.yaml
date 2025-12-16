@@ -2,13 +2,12 @@ name: Kubernetes Manifests CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'copilot/**' ]
     paths:
       - 'kustomize/**'
       - 'helm/**'
       - '.github/workflows/k8s-ci.yaml'
   pull_request:
-    branches: [ main, develop ]
     paths:
       - 'kustomize/**'
       - 'helm/**'
