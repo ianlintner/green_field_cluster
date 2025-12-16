@@ -54,7 +54,7 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 - ✅ **MySQL** - Multi-instance cluster with replication
 - ✅ **MongoDB** - Replica set configuration
 - ✅ **Kafka** - Distributed messaging with Zookeeper
-- ✅ **Istio** - Service mesh for traffic management
+- ✅ **Istio** - Service mesh with SSL/TLS ingress (internal & external gateways)
 
 ### Observability Stack
 - ✅ **OpenTelemetry Collector** - Centralized telemetry
@@ -62,7 +62,10 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 - ✅ **Prometheus** - Metrics collection
 - ✅ **Grafana** - Dashboards and visualization
 
-### Security
+### Security & SSL/TLS
+- ✅ **cert-manager** - Automated SSL/TLS certificate management
+- ✅ **Let's Encrypt Integration** - Staging and production issuers
+- ✅ **SSL Ingress** - External gateway with TLS termination
 - ✅ **Sealed Secrets** - Encrypted Kubernetes secrets
 
 ### DevOps & Automation
@@ -74,20 +77,12 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 
 ### Example Application
 - ✅ **FastAPI App** - Fully instrumented with OTel and Prometheus metrics
-- ✅ **PostgreSQL** - Multi-instance cluster for HA
-- ✅ **MySQL** - Multi-instance cluster with replication
-- ✅ **MongoDB** - Replica set configuration
-- ✅ **Kafka** - Distributed messaging with Zookeeper
-- ✅ **Istio** - Service mesh for traffic management
 
 ### Observability Stack
 - ✅ **OpenTelemetry Collector** - Centralized telemetry
 - ✅ **Jaeger** - Distributed tracing
 - ✅ **Prometheus** - Metrics collection
 - ✅ **Grafana** - Dashboards and visualization
-
-### Security
-- ✅ **Sealed Secrets** - Encrypted Kubernetes secrets
 
 ### Example Application
 - ✅ **FastAPI App** - Fully instrumented with OTel and Prometheus metrics
@@ -108,7 +103,8 @@ For detailed documentation, see [docs/README.md](docs/README.md)
 │   │   ├── mysql/
 │   │   ├── mongodb/
 │   │   ├── kafka/
-│   │   ├── istio/
+│   │   ├── istio/         # Istio service mesh with SSL/TLS
+│   │   ├── cert-manager/  # Certificate management
 │   │   ├── otel-collector/
 │   │   ├── jaeger/
 │   │   ├── prometheus/

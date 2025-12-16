@@ -1,0 +1,61 @@
+# Example Certificate resource for use with Istio Gateway
+# This creates a certificate request that cert-manager will fulfill
+
+---
+# Example certificate for external gateway
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: example-cert
+  namespace: istio-system
+spec:
+  # The secret name where the certificate will be stored
+  secretName: example-tls
+  # Duration before the certificate expires
+  duration: 2160h # 90 days
+  # How long before expiry to renew the certificate
+  renewBefore: 360h # 15 days
+  # Organization details
+  subject:
+    organizations:
+    - Example Inc
+  # Use the production issuer
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io
+  # Common name
+  commonName: example.com
+  # DNS names covered by this certificate
+  dnsNames:
+  - example.com
+  - www.example.com
+  - api.example.com
+  # Private key configuration
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+---
+# Example certificate for staging/testing
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: example-staging-cert
+  namespace: istio-system
+spec:
+  secretName: example-staging-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+    group: cert-manager.io
+  commonName: staging.example.com
+  dnsNames:
+  - staging.example.com
+  - "*.staging.example.com"
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048

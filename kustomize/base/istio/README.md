@@ -1,6 +1,6 @@
 # Istio Installation Guide
 
-This directory contains the configuration for Istio service mesh.
+This directory contains the configuration for Istio service mesh with SSL/TLS ingress support.
 
 ## Installation
 
@@ -15,7 +15,7 @@ kubectl apply -f https://github.com/istio/istio/releases/download/1.20.0/istio-o
 # Wait for operator to be ready
 kubectl wait --for=condition=available --timeout=600s deployment/istio-operator -n istio-operator
 
-# Install Istio control plane
+# Install Istio control plane with ingress gateways
 kubectl apply -f istio-config.yaml
 ```
 
@@ -32,8 +32,77 @@ helm install istio-base istio/base -n istio-system --create-namespace
 # Install Istiod
 helm install istiod istio/istiod -n istio-system --wait
 
-# Install Istio ingress gateway
-helm install istio-ingress istio/gateway -n istio-system
+# Install external ingress gateway
+helm install istio-ingressgateway istio/gateway \
+  -n istio-system \
+  --set labels.istio=ingressgateway \
+  --set labels.gateway-type=external
+
+# Install internal ingress gateway
+helm install istio-ingressgateway-internal istio/gateway \
+  -n istio-system \
+  --set labels.istio=ingressgateway-internal \
+  --set labels.gateway-type=internal \
+  --set service.type=ClusterIP
+```
+
+## Ingress Gateways
+
+This configuration includes two ingress gateways:
+
+### External Gateway (`istio-ingressgateway`)
+- **Type**: LoadBalancer
+- **Purpose**: Public-facing services with SSL/TLS termination
+- **Ports**: 80 (HTTP), 443 (HTTPS)
+- **Selector**: `istio: ingressgateway`, `gateway-type: external`
+
+### Internal Gateway (`istio-ingressgateway-internal`)
+- **Type**: ClusterIP
+- **Purpose**: Internal services within the cluster
+- **Ports**: 80 (HTTP), 443 (HTTPS with mTLS)
+- **Selector**: `istio: ingressgateway-internal`, `gateway-type: internal`
+
+## Gateway Resources
+
+After Istio is installed, apply the Gateway configurations:
+
+```bash
+kubectl apply -f gateways.yaml
+```
+
+This creates:
+- `external-gateway`: For public HTTPS traffic with TLS termination
+- `internal-gateway`: For internal services with mTLS
+
+## SSL/TLS Certificates
+
+To use SSL/TLS with the gateways:
+
+1. **Install cert-manager** (see [cert-manager documentation](../cert-manager/README.md))
+2. **Create Certificate resources** (see `certificates-example.yaml` for examples)
+3. **Reference the certificate** in your Gateway configuration
+
+Example certificate in istio-system namespace:
+
+```bash
+kubectl apply -f certificates-example.yaml
+```
+
+This will create TLS secrets that can be referenced in Gateway configurations.
+
+## VirtualService Examples
+
+See `virtualservices-example.yaml` for example routing configurations:
+
+- External API access via `api.example.com`
+- Internal monitoring dashboard access
+- Path-based routing
+
+To use the examples:
+
+```bash
+# Update the example files with your actual domain names
+kubectl apply -f virtualservices-example.yaml
 ```
 
 ## Verification
@@ -42,6 +111,54 @@ helm install istio-ingress istio/gateway -n istio-system
 # Check Istio installation
 kubectl get pods -n istio-system
 
+# Check ingress gateways
+kubectl get svc -n istio-system | grep ingressgateway
+
 # Verify namespace injection
 kubectl get namespace greenfield -o yaml | grep istio-injection
+
+# Check Gateway resources
+kubectl get gateway -n istio-system
+
+# Check VirtualService resources
+kubectl get virtualservice -A
 ```
+
+## Testing SSL/TLS
+
+After setting up certificates:
+
+```bash
+# Get the external LoadBalancer IP
+export INGRESS_HOST=$(kubectl get svc istio-ingressgateway -n istio-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+# Test HTTPS endpoint (replace with your domain)
+curl -v https://api.example.com --resolve api.example.com:443:$INGRESS_HOST
+```
+
+## Troubleshooting
+
+Check Istio ingress gateway logs:
+
+```bash
+# External gateway
+kubectl logs -n istio-system -l istio=ingressgateway
+
+# Internal gateway
+kubectl logs -n istio-system -l istio=ingressgateway-internal
+```
+
+Check Gateway status:
+
+```bash
+kubectl describe gateway external-gateway -n istio-system
+kubectl describe gateway internal-gateway -n istio-system
+```
+
+## Important Notes
+
+- **cert-manager Required**: SSL/TLS functionality requires cert-manager to be installed
+- **DNS Configuration**: Ensure your domain's DNS points to the LoadBalancer IP
+- **Certificate Secrets**: Must be in the `istio-system` namespace
+- **HTTP to HTTPS Redirect**: Uncomment the `httpsRedirect` option in gateways.yaml to enable
+

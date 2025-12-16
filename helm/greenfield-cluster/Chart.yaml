@@ -1,6 +1,6 @@
 apiVersion: v2
 name: greenfield-cluster
-description: A complete Kubernetes cluster setup for greenfield projects with databases, messaging, observability, and example applications
+description: A complete Kubernetes cluster setup for greenfield projects with databases, messaging, observability, SSL ingress, and example applications
 type: application
 version: 1.0.0
 appVersion: "1.0.0"
@@ -12,6 +12,9 @@ keywords:
   - mongodb
   - kafka
   - istio
+  - cert-manager
+  - ssl
+  - tls
   - prometheus
   - grafana
   - opentelemetry

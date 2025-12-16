@@ -1,0 +1,61 @@
+# Example VirtualService configurations for SSL/TLS ingress
+# These are examples and should be customized for your specific services
+
+---
+# Example: FastAPI application with external access
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fastapi-external
+  namespace: greenfield
+spec:
+  hosts:
+  - "api.example.com"
+  gateways:
+  - istio-system/external-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: fastapi-app.greenfield.svc.cluster.local
+        port:
+          number: 8000
+---
+# Example: Internal service access
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: internal-service
+  namespace: greenfield
+spec:
+  hosts:
+  - "monitoring.internal"
+  gateways:
+  - istio-system/internal-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /grafana
+    route:
+    - destination:
+        host: grafana.greenfield.svc.cluster.local
+        port:
+          number: 3000
+  - match:
+    - uri:
+        prefix: /prometheus
+    route:
+    - destination:
+        host: prometheus.greenfield.svc.cluster.local
+        port:
+          number: 9090
+  - match:
+    - uri:
+        prefix: /jaeger
+    route:
+    - destination:
+        host: jaeger-query.greenfield.svc.cluster.local
+        port:
+          number: 16686

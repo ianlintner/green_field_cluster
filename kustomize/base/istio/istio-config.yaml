@@ -17,11 +17,42 @@ spec:
           minReplicas: 1
           maxReplicas: 3
     ingressGateways:
+      # External ingress gateway for public-facing services with SSL/TLS termination
       - name: istio-ingressgateway
         enabled: true
+        label:
+          istio: ingressgateway
+          gateway-type: external
         k8s:
           service:
             type: LoadBalancer
+            ports:
+              - port: 80
+                targetPort: 8080
+                name: http2
+              - port: 443
+                targetPort: 8443
+                name: https
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      # Internal ingress gateway for internal services
+      - name: istio-ingressgateway-internal
+        enabled: true
+        label:
+          istio: ingressgateway-internal
+          gateway-type: internal
+        k8s:
+          service:
+            type: ClusterIP
+            ports:
+              - port: 80
+                targetPort: 8080
+                name: http2
+              - port: 443
+                targetPort: 8443
+                name: https
           resources:
             requests:
               cpu: 100m
