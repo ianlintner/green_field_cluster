@@ -143,6 +143,14 @@ clean-prod:
 # Install prerequisites
 install-prerequisites:
 	@echo "Installing prerequisites..."
+	@echo "Installing cert-manager..."
+	@kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.0/cert-manager.yaml
+	@echo "Waiting for cert-manager to be ready..."
+	@kubectl wait --for=condition=available --timeout=300s deployment/cert-manager -n cert-manager || true
+	@kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-webhook -n cert-manager || true
+	@kubectl wait --for=condition=available --timeout=300s deployment/cert-manager-cainjector -n cert-manager || true
+	@echo "Installing cert-manager ClusterIssuers..."
+	@kubectl apply -k kustomize/base/cert-manager/
 	@echo "Installing Istio..."
 	@curl -L https://istio.io/downloadIstio | sh -
 	@cd istio-* && export PATH=$$PWD/bin:$$PATH && istioctl install --set profile=default -y

@@ -1,0 +1,62 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: external-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+    gateway-type: external
+  servers:
+  # HTTP server for ACME challenges and HTTP to HTTPS redirect
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+    # Uncomment to enable automatic HTTP to HTTPS redirect
+    # tls:
+    #   httpsRedirect: true
+  # HTTPS server with TLS termination
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      # Reference to the TLS certificate secret
+      # This secret should be created by cert-manager
+      credentialName: example-tls
+    hosts:
+    - "example.com"
+    - "*.example.com"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: internal-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway-internal
+    gateway-type: internal
+  servers:
+  # HTTP server for internal services
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*.internal"
+    - "*.svc.cluster.local"
+  # HTTPS server with mTLS for internal services
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: MUTUAL
+      credentialName: internal-tls
+    hosts:
+    - "*.internal"

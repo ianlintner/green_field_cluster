@@ -15,4 +15,6 @@ resources:
   - prometheus
   - grafana
   - fastapi-app
-  # Note: Istio and sealed-secrets should be installed separately as cluster-wide components
+  # Note: Istio, cert-manager, and sealed-secrets should be installed separately as cluster-wide components
+  # After installing cert-manager, apply the cert-manager resources:
+  # kubectl apply -k base/cert-manager/

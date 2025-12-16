@@ -3,3 +3,7 @@ kind: Kustomization
 
 resources:
   - istio-config.yaml
+  - gateways.yaml
+  # Uncomment the following lines to deploy example configurations
+  # - virtualservices-example.yaml
+  # - certificates-example.yaml

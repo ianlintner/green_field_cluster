@@ -203,6 +203,36 @@ istio:
   enabled: true
   # Istio should be installed separately using Istio operator or Helm chart
   # This flag controls whether to enable Istio injection for the namespace
+  
+  # Ingress gateway configuration
+  ingressGateway:
+    # External gateway for public-facing services
+    external:
+      enabled: true
+      type: LoadBalancer
+      # Set specific LoadBalancer IP (optional)
+      loadBalancerIP: ""
+    # Internal gateway for cluster-internal services
+    internal:
+      enabled: true
+      type: ClusterIP
+
+# cert-manager configuration
+certManager:
+  enabled: true
+  # cert-manager should be installed separately
+  # This flag controls whether to create ClusterIssuers
+  
+  # Email for Let's Encrypt notifications
+  email: "admin@example.com"
+  
+  # Let's Encrypt staging issuer (for testing)
+  staging:
+    enabled: true
+  
+  # Let's Encrypt production issuer
+  production:
+    enabled: true
 
 # Storage class to use for persistent volumes
 storageClass: ""
