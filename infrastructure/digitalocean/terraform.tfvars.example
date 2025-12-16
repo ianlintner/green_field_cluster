@@ -1,0 +1,34 @@
+# DigitalOcean Kubernetes Configuration Example
+# Copy this file to terraform.tfvars and customize
+
+# REQUIRED: Set your DigitalOcean API token
+# Option 1: Set in this file (not recommended for version control)
+# do_token = "your-digitalocean-api-token"
+# 
+# Option 2: Use environment variable (recommended)
+# export TF_VAR_do_token="your-digitalocean-api-token"
+
+# Cluster Configuration
+cluster_name       = "greenfield-cluster"
+region             = "nyc1"  # Options: nyc1, nyc3, sfo3, ams3, sgp1, lon1, fra1, tor1, blr1, syd1
+kubernetes_version = "1.28.2-do.0"
+environment        = "dev"
+
+# Network Configuration
+vpc_cidr = "10.10.0.0/16"
+
+# Droplet Configuration
+node_size = "s-2vcpu-4gb"  # Options below
+# Standard Droplets:
+#   s-2vcpu-2gb: $18/month
+#   s-2vcpu-4gb: $24/month (recommended for dev)
+#   s-4vcpu-8gb: $48/month (recommended for prod)
+# 
+# Premium CPU Droplets:
+#   c-2: $42/month
+#   c-4: $84/month
+
+# Node Scaling
+node_count     = 3
+node_min_count = 2
+node_max_count = 6

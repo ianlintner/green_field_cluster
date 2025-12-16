@@ -1,0 +1,32 @@
+# AWS EKS Configuration Example
+# Copy this file to terraform.tfvars and customize
+
+# AWS Region
+aws_region = "us-west-2"
+
+# Cluster Configuration
+cluster_name       = "greenfield-cluster"
+kubernetes_version = "1.28"
+environment        = "dev"
+
+# Network Configuration
+vpc_cidr           = "10.0.0.0/16"
+single_nat_gateway = true  # Set to false for HA (higher cost)
+
+# Instance Configuration
+use_arm            = true  # Set to false to use x86 instances
+# arm_instance_types = ["t4g.large", "t4g.xlarge"]  # Uncomment to override
+# x86_instance_types = ["t3.large", "t3.xlarge"]    # Uncomment to override
+
+# Node Scaling
+node_group_min_size     = 2
+node_group_max_size     = 6
+node_group_desired_size = 3
+
+# Tags
+tags = {
+  Terraform   = "true"
+  Environment = "dev"
+  Project     = "greenfield-cluster"
+  ManagedBy   = "terraform"
+}
