@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Kubernetes
+*.orig
+*.rej
+
+# Secrets (never commit real secrets)
+secrets/
+*.secret.yaml
+!*sealed-secret.yaml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+*.tar.gz
+*.zip
+
+# Docker
+.dockerignore
+
+# Helm
+*.tgz
+helm/*/charts/*.tgz
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Local environment
+.env
+.env.local
+local/
+
+# Build outputs
+apps/fastapi-example/app/__pycache__/
+build/

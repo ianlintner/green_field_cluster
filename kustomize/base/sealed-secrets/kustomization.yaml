@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Sealed Secrets Controller should be installed separately via Helm or kubectl
+# This kustomization can include example sealed secrets
+
+resources: []
+
+# Example: Add your sealed secrets here after creating them with kubeseal
+# resources:
+#   - sealed-postgres-secret.yaml
+#   - sealed-mysql-secret.yaml
+#   - sealed-mongodb-secret.yaml
+#   - sealed-grafana-secret.yaml

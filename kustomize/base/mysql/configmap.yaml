@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: greenfield
+data:
+  MYSQL_DATABASE: greenfield
+  MYSQL_USER: mysql
