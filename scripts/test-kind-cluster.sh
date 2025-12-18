@@ -44,7 +44,7 @@ echo "✓ Manifests built"
 echo ""
 
 echo "Applying namespace..."
-kubectl apply -f kustomize/base/namespace/
+kubectl apply -f kustomize/base/namespace/namespace.yaml
 echo "✓ Namespace created"
 echo ""
 

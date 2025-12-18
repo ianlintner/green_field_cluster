@@ -215,7 +215,7 @@ jobs:
           kustomize build kustomize/base/ > "${MANIFEST_FILE}"
 
           # Apply namespace first
-          kubectl apply -f kustomize/base/namespace/
+          kubectl apply -f kustomize/base/namespace/namespace.yaml
 
           # Apply the manifests (some may fail due to missing CRDs, that's expected)
           kubectl apply -f "${MANIFEST_FILE}" --timeout=30s || true
