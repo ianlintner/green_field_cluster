@@ -1,0 +1,31 @@
+# Azure AKS Configuration Example
+# Copy this file to terraform.tfvars and customize
+
+# Azure Configuration
+location     = "East US"
+cluster_name = "greenfield-cluster"
+kubernetes_version = "1.28"
+environment  = "dev"
+
+# Network Configuration
+vnet_cidr   = "10.0.0.0/16"
+subnet_cidr = "10.0.1.0/24"
+
+# VM Configuration
+use_arm    = true  # Set to false to use x86 VMs
+# arm_vm_size = "Standard_D2ps_v5"  # Uncomment to override (2 vCPU, 8 GB)
+# arm_vm_size = "Standard_D4ps_v5"  # 4 vCPU, 16 GB option
+# x86_vm_size = "Standard_D2s_v3"   # Uncomment to override
+
+# Node Scaling
+node_count     = 3
+node_min_count = 2
+node_max_count = 6
+
+# Tags
+tags = {
+  Terraform   = "true"
+  Environment = "dev"
+  Project     = "greenfield-cluster"
+  ManagedBy   = "terraform"
+}

@@ -169,12 +169,15 @@ curl http://localhost:8000/postgres
 
 ## 🌐 Cloud Providers
 
-Works with all major cloud providers:
-- Amazon EKS
-- Google GKE
-- Azure AKS
-- DigitalOcean Kubernetes
-- On-premises clusters
+Works with all major cloud providers. **Ready-to-use infrastructure examples** available in the [`infrastructure/`](infrastructure/) directory:
+
+- **Amazon EKS** - Terraform with ARM Graviton support ([guide](infrastructure/aws/))
+- **Google GKE** - Terraform with ARM Tau T2A support ([guide](infrastructure/gcp/))
+- **Azure AKS** - Terraform with ARM Ampere Altra support ([guide](infrastructure/azure/))
+- **DigitalOcean Kubernetes** - Terraform configuration ([guide](infrastructure/digitalocean/))
+- **On-premises clusters** - kubeadm, k3s, RKE2, OpenStack Magnum ([guide](infrastructure/on-premises/))
+
+See the [Infrastructure README](infrastructure/README.md) for quick cluster setup instructions.
 
 ## 📊 Monitoring
 

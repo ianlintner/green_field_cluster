@@ -1,0 +1,30 @@
+# GCP GKE Configuration Example
+# Copy this file to terraform.tfvars and customize
+
+# REQUIRED: Set your GCP project ID
+project_id = "your-gcp-project-id"
+
+# GCP Configuration
+region       = "us-central1"
+zone         = "us-central1-a"  # Used if regional = false
+cluster_name = "greenfield-cluster"
+environment  = "dev"
+
+# Cluster Type
+regional = false  # Set to true for regional cluster (HA, higher cost)
+
+# Network Configuration
+subnet_cidr   = "10.0.0.0/24"
+pods_cidr     = "10.1.0.0/16"
+services_cidr = "10.2.0.0/16"
+
+# Machine Configuration
+use_arm = true  # Set to false to use x86 machines
+# arm_machine_type = "t2a-standard-2"  # Uncomment to override (2 vCPU, 8 GB)
+# arm_machine_type = "t2a-standard-4"  # 4 vCPU, 16 GB option
+# x86_machine_type = "e2-standard-2"   # Uncomment to override
+
+# Node Scaling (per zone)
+node_count     = 3
+node_min_count = 2
+node_max_count = 6
