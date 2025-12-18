@@ -13,6 +13,9 @@ on:
       - 'helm/**'
       - '.github/workflows/k8s-ci.yaml'
 
+permissions:
+  contents: read
+
 jobs:
   validate-kustomize:
     name: Validate Kustomize Manifests
