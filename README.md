@@ -71,6 +71,7 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 ### DevOps & Automation
 - ✅ **GitHub Actions CI** - Automated manifest validation
 - ✅ **Quality Gates** - Kustomize, Helm, YAML linting
+- ✅ **Kind Cluster Testing** - Real K8s cluster testing in CI
 - ✅ **Security Scanning** - Trivy vulnerability checks
 - ✅ **Auto-deployed Docs** - MkDocs on GitHub Pages
 - ✅ **Copilot Integration** - AI-assisted customization
@@ -156,6 +157,26 @@ helm install greenfield helm/greenfield-cluster \
 This project uses **Sealed Secrets** for encrypting Kubernetes secrets before storing them in Git. See [kustomize/base/sealed-secrets/README.md](kustomize/base/sealed-secrets/README.md) for setup instructions.
 
 ## 🧪 Testing
+
+### Local Kind Cluster Testing
+
+Test manifests on a local Kubernetes cluster:
+
+```bash
+# Run automated test on Kind cluster
+./scripts/test-kind-cluster.sh
+
+# Or use Make
+make test-kind-cluster
+
+# Create/delete Kind cluster manually
+make kind-create
+make kind-delete
+```
+
+See [docs/development/testing.md](docs-mkdocs/docs/development/testing.md) for detailed testing documentation.
+
+### Port Forwarding
 
 ```bash
 # Port forward to FastAPI app

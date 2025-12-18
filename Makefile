@@ -1,6 +1,6 @@
 # Makefile for Greenfield Cluster
 
-.PHONY: help validate build-kustomize build-base build-dev build-staging build-prod deploy-dev deploy-staging deploy-prod clean test install-prerequisites install-cert-issuers
+.PHONY: help validate build-kustomize build-base build-dev build-staging build-prod deploy-dev deploy-staging deploy-prod clean test install-prerequisites install-cert-issuers test-kind-cluster kind-create kind-delete
 
 # Default target
 help:
@@ -32,6 +32,9 @@ help:
 	@echo ""
 	@echo "Testing:"
 	@echo "  make test               - Run basic connectivity tests"
+	@echo "  make test-kind-cluster  - Test manifests on local Kind cluster"
+	@echo "  make kind-create        - Create a local Kind cluster"
+	@echo "  make kind-delete        - Delete the local Kind cluster"
 	@echo "  make port-forward       - Set up port forwarding for all services"
 	@echo ""
 	@echo "Cleanup:"
@@ -181,3 +184,19 @@ install-cert-issuers:
 		echo "❌ Installation cancelled. Please update email addresses first."; \
 		exit 1; \
 	fi
+
+# Kind cluster testing targets
+test-kind-cluster:
+	@echo "Testing manifests on Kind cluster..."
+	@./scripts/test-kind-cluster.sh
+
+kind-create:
+	@echo "Creating Kind cluster..."
+	@kind create cluster --name greenfield-test --config scripts/kind-config.yaml
+	@echo "✓ Kind cluster created"
+	@kubectl cluster-info --context kind-greenfield-test
+
+kind-delete:
+	@echo "Deleting Kind cluster..."
+	@kind delete cluster --name greenfield-test || echo "Cluster doesn't exist"
+	@echo "✓ Kind cluster deleted"

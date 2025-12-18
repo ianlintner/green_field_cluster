@@ -269,6 +269,27 @@ helm install greenfield helm/greenfield-cluster -f custom-values.yaml
 
 ## Testing the Deployment
 
+### Testing with Kind (Local Kubernetes)
+
+For local testing with a real Kubernetes cluster:
+
+```bash
+# Run automated test on Kind cluster
+./scripts/test-kind-cluster.sh
+
+# Or use Make targets
+make test-kind-cluster     # Full test with Kind
+make kind-create           # Create Kind cluster only
+make kind-delete           # Delete Kind cluster
+
+# Manual validation
+make validate              # Validate all manifests
+```
+
+See [development/testing.md](../docs-mkdocs/docs/development/testing.md) for detailed testing documentation.
+
+### Testing on Live Cluster
+
 ```bash
 # Check all pods are running
 kubectl get pods -n greenfield
