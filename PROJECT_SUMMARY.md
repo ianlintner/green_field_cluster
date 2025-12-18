@@ -127,6 +127,23 @@ This repository provides a complete MVP Kubernetes cluster implementation for gr
     - Chart.yaml with metadata
     - Compatible with both methods
 
+### CI/CD & Testing (Fully Implemented)
+
+15. **GitHub Actions CI** ✅
+    - Automated Kustomize validation
+    - Helm chart linting and templating
+    - YAML format validation
+    - Kubeconform resource validation
+    - Kind cluster integration testing
+    - Test summary reports
+
+16. **Local Testing** ✅
+    - Kind (Kubernetes in Docker) support
+    - Test script for local validation
+    - Makefile targets for easy testing
+    - Automated manifest deployment
+    - Pod status verification
+
 ## 📁 File Structure
 
 ```
@@ -143,6 +160,12 @@ green_field_cluster/
 │       ├── requirements.txt
 │       ├── README.md
 │       └── app/
+│           └── main.py               # FastAPI with OTel & metrics
+│
+├── scripts/
+│   ├── README.md                    # Scripts documentation
+│   └── test-kind-cluster.sh         # Local Kind testing script
+│
 │           └── main.py               # FastAPI with OTel & metrics
 │
 ├── kustomize/
@@ -278,11 +301,30 @@ Comprehensive documentation includes:
 
 All Kubernetes manifests have been validated with `kustomize build`.
 
-To test locally:
+### CI Testing (GitHub Actions)
+
+The CI pipeline validates manifests on every push:
+- Kustomize builds for all overlays
+- Helm chart linting and templating
+- YAML format validation
+- Kubeconform schema validation
+- **Kind cluster integration testing** (real K8s deployment)
+
+### Local Testing
+
+Test manifests on your local machine with Kind:
+
 ```bash
-make validate        # Validate all manifests
-make build-base      # Build base configuration
-make deploy-dev      # Deploy to development
+# Run automated Kind cluster test
+./scripts/test-kind-cluster.sh
+
+# Or use Makefile targets
+make test-kind-cluster    # Full test with Kind
+make kind-create          # Create Kind cluster
+make kind-delete          # Delete Kind cluster
+make validate             # Validate all manifests
+make build-base           # Build base configuration
+make deploy-dev           # Deploy to development
 ```
 
 ## 🌟 Highlights
@@ -293,7 +335,8 @@ make deploy-dev      # Deploy to development
 - **Secure by design**: Sealed secrets, RBAC, service mesh
 - **Observable**: Full telemetry stack included
 - **Flexible**: Both Kustomize and Helm options
-- **Tested**: All manifests validated
+- **Tested**: All manifests validated with CI and Kind cluster testing
+- **Developer-friendly**: Local testing with Kind, comprehensive Makefile
 
 ## 📝 Next Steps for Users
 
