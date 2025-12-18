@@ -192,16 +192,7 @@ test-kind-cluster:
 
 kind-create:
 	@echo "Creating Kind cluster..."
-	@kind create cluster --name greenfield-test --config - <<EOF
-	kind: Cluster
-	apiVersion: kind.x-k8s.io/v1alpha4
-	nodes:
-	- role: control-plane
-	  extraPortMappings:
-	  - containerPort: 30080
-	    hostPort: 30080
-	    protocol: TCP
-	EOF
+	@kind create cluster --name greenfield-test --config scripts/kind-config.yaml
 	@echo "✓ Kind cluster created"
 	@kubectl cluster-info --context kind-greenfield-test
 

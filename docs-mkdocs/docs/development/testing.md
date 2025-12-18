@@ -77,6 +77,13 @@ KIND_CLUSTER_NAME=my-test ./scripts/test-kind-cluster.sh
 
 # Use a different namespace
 NAMESPACE=my-namespace ./scripts/test-kind-cluster.sh
+
+# Manually create and test
+kind create cluster --name my-test --config scripts/kind-config.yaml
+MANIFEST_FILE=$(mktemp)
+kustomize build kustomize/base/ > "${MANIFEST_FILE}"
+kubectl apply -f "${MANIFEST_FILE}"
+rm -f "${MANIFEST_FILE}"
 ```
 
 ### Troubleshooting

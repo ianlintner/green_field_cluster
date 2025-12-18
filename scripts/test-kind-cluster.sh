@@ -26,16 +26,8 @@ if kind get clusters | grep -q "^${CLUSTER_NAME}$"; then
   echo "  To recreate, run: kind delete cluster --name ${CLUSTER_NAME}"
 else
   echo "Creating Kind cluster '${CLUSTER_NAME}'..."
-  cat <<EOF | kind create cluster --name "${CLUSTER_NAME}" --config=-
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-  extraPortMappings:
-  - containerPort: 30080
-    hostPort: 30080
-    protocol: TCP
-EOF
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  kind create cluster --name "${CLUSTER_NAME}" --config="${SCRIPT_DIR}/kind-config.yaml"
   echo "✓ Kind cluster created"
 fi
 
@@ -46,7 +38,8 @@ echo ""
 
 # Build and apply manifests
 echo "Building manifests..."
-kustomize build kustomize/base/ > /tmp/manifests.yaml
+MANIFEST_FILE=$(mktemp)
+kustomize build kustomize/base/ > "${MANIFEST_FILE}"
 echo "✓ Manifests built"
 echo ""
 
@@ -57,7 +50,8 @@ echo ""
 
 echo "Applying manifests..."
 echo "Note: Some resources may fail if they require CRDs (like Istio, cert-manager)"
-kubectl apply -f /tmp/manifests.yaml --timeout=30s || true
+kubectl apply -f "${MANIFEST_FILE}" --timeout=30s || true
+rm -f "${MANIFEST_FILE}"
 echo "✓ Manifests applied (with expected failures for CRD-dependent resources)"
 echo ""
 

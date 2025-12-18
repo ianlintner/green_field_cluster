@@ -195,15 +195,7 @@ jobs:
         with:
           cluster_name: greenfield-test
           wait: 120s
-          config: |
-            kind: Cluster
-            apiVersion: kind.x-k8s.io/v1alpha4
-            nodes:
-            - role: control-plane
-              extraPortMappings:
-              - containerPort: 30080
-                hostPort: 30080
-                protocol: TCP
+          config: scripts/kind-config.yaml
 
       - name: Verify cluster
         run: |
@@ -216,13 +208,15 @@ jobs:
         run: |
           echo "::group::Building and applying base manifests"
           # Build the manifests
-          kustomize build kustomize/base/ > /tmp/manifests.yaml
+          MANIFEST_FILE=$(mktemp)
+          kustomize build kustomize/base/ > "${MANIFEST_FILE}"
 
           # Apply namespace first
           kubectl apply -f kustomize/base/namespace/
 
           # Apply the manifests (some may fail due to missing CRDs, that's expected)
-          kubectl apply -f /tmp/manifests.yaml --timeout=30s || true
+          kubectl apply -f "${MANIFEST_FILE}" --timeout=30s || true
+          rm -f "${MANIFEST_FILE}"
 
           echo "::endgroup::"
 
@@ -249,13 +243,13 @@ jobs:
         run: |
           echo "::group::Pod details"
           # Get pods that are not running
-          kubectl get pods -n greenfield --field-selector=status.phase!=Running --no-headers 2>/dev/null | awk '{print $1}' | while read pod; do
-            if [ ! -z "$pod" ]; then
+          while read -r pod; do
+            if [ -n "$pod" ]; then
               echo "--- Describing pod: $pod ---"
               kubectl describe pod "$pod" -n greenfield || true
               echo ""
             fi
-          done
+          done < <(kubectl get pods -n greenfield --field-selector=status.phase!=Running --no-headers 2>/dev/null | awk '{print $1}')
           echo "::endgroup::"
 
       - name: Test summary
