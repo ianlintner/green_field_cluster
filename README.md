@@ -1,5 +1,7 @@
 # Greenfield Cluster
 
+<img width="512" height="512" alt="green_field" src="https://github.com/user-attachments/assets/c2c57f9e-29af-4f6f-9d91-2de52344e62a" />
+
 A production-ready Kubernetes cluster setup for greenfield projects and startups with comprehensive infrastructure, observability, and security features.
 
 ## ⚠️ SECURITY WARNING
