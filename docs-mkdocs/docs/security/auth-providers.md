@@ -107,7 +107,7 @@ graph LR
    ```
 
 5. **Update Configuration**
-   Edit `platform/auth/overlays/provider-azuread/configmap.yaml`:
+   Edit `kustomize/base/auth/overlays/provider-azuread/configmap.yaml`:
    ```yaml
    data:
      oidc-issuer-url: "https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0"
@@ -214,7 +214,7 @@ curl -I https://myapp.example.com
    ```
 
 4. **Configure Organization/Team (Optional)**
-   Edit `platform/auth/overlays/provider-github/configmap.yaml`:
+   Edit `kustomize/base/auth/overlays/provider-github/configmap.yaml`:
    ```yaml
    data:
      github-org: "your-organization"
@@ -371,7 +371,7 @@ curl -I https://myapp.example.com
 
 1. **Deploy Keycloak**
    ```bash
-   kubectl apply -k platform/auth/overlays/keycloak-enabled/
+   kubectl apply -k kustomize/base/auth/overlays/keycloak-enabled/
    ```
 
 2. **Create Secrets**

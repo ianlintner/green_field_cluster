@@ -195,7 +195,7 @@ make auth.protect APP=myapp HOST=myapp.example.com POLICY=group:developers
 make auth.doctor
 ```
 
-See [platform/auth/README.md](platform/auth/base/README.md) for detailed authentication documentation.
+See [kustomize/base/auth/README.md](kustomize/base/auth/base/README.md) for detailed authentication documentation.
 
 ## 🧪 Testing
 

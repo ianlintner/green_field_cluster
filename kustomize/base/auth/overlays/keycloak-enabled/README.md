@@ -15,7 +15,7 @@ This overlay deploys Keycloak as the primary identity provider for the cluster.
 ### Deploy Keycloak
 
 ```bash
-kubectl apply -k platform/auth/overlays/keycloak-enabled/
+kubectl apply -k kustomize/base/auth/overlays/keycloak-enabled/
 ```
 
 ### Access Keycloak Admin Console

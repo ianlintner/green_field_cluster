@@ -218,7 +218,7 @@ kubectl delete virtualservice,authorizationpolicy,requestauthentication \
 
 ### Uninstall auth module
 ```bash
-kubectl delete -k platform/auth/overlays/provider-azuread/
+kubectl delete -k kustomize/base/auth/overlays/provider-azuread/
 ```
 
 ### Remove all auth resources
@@ -237,7 +237,7 @@ kubectl delete deployment,service,configmap \
 kubectl delete envoyfilter oauth2-proxy-ext-authz -n istio-system
 
 # Re-enable
-kubectl apply -f platform/auth/base/gateway/envoyfilter-ext-authz.yaml
+kubectl apply -f kustomize/base/auth/base/gateway/envoyfilter-ext-authz.yaml
 ```
 
 ### Allow all users temporarily
@@ -263,7 +263,7 @@ kubectl delete authorizationpolicy temporary-allow-all -n greenfield
 ```bash
 # Delete and recreate
 kubectl delete deployment oauth2-proxy -n greenfield
-kubectl apply -k platform/auth/overlays/provider-azuread/
+kubectl apply -k kustomize/base/auth/overlays/provider-azuread/
 ```
 
 ## Resources

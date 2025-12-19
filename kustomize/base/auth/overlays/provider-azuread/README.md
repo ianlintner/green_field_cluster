@@ -60,7 +60,7 @@ kubectl apply -f sealed-secret.yaml
 ### 3. Deploy
 
 ```bash
-kubectl apply -k platform/auth/overlays/provider-azuread/
+kubectl apply -k kustomize/base/auth/overlays/provider-azuread/
 ```
 
 ## Group-Based Authorization

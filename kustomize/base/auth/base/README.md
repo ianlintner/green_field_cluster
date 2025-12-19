@@ -154,7 +154,7 @@ Authentication is enforced at the Istio ingress gateway using Envoy's ext_authz 
 ## Directory Structure
 
 ```
-platform/auth/
+kustomize/base/auth/
 ├── base/
 │   ├── oauth2-proxy/       # OAuth2 proxy base manifests
 │   ├── keycloak/           # Keycloak IdP (optional)
