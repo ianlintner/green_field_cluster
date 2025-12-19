@@ -9,15 +9,3 @@ data:
   redirect-url: "https://auth.example.com/oauth2/callback"
   cookie-domains: ".example.com"
   whitelist-domains: ".example.com"
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: keycloak-realm-config
-  namespace: greenfield
-data:
-  # This is a placeholder for Keycloak realm configuration
-  # In production, use Keycloak admin API or Keycloak Operator
-  realm-name: "master"
-  okta-saml-idp-entity-id: "http://www.okta.com/YOUR_IDP_ID"
-  okta-saml-sso-url: "https://your-org.okta.com/app/YOUR_APP_ID/sso/saml"

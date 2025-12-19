@@ -77,3 +77,6 @@ local/
 # Build outputs
 apps/fastapi-example/app/__pycache__/
 build/
+
+# Auth module generated files
+platform/auth/overlays/*/secret-stub.yaml

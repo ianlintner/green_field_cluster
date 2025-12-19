@@ -3,12 +3,12 @@ kind: Kustomization
 
 namespace: greenfield
 
-bases:
+resources:
   - ../../base
 
-patchesStrategicMerge:
-  - configmap.yaml
-  - deployment-patch.yaml
+patches:
+  - path: configmap.yaml
+  - path: deployment-patch.yaml
 
 configMapGenerator:
   - name: provider-info

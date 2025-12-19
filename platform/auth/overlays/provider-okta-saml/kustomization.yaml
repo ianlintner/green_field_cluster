@@ -3,16 +3,14 @@ kind: Kustomization
 
 namespace: greenfield
 
-bases:
-  - ../../base
-
 resources:
+  - ../../base
   # Include Keycloak since it's required for SAML brokering
   - ../../base/keycloak
 
-patchesStrategicMerge:
-  - configmap.yaml
-  - deployment-patch.yaml
+patches:
+  - path: configmap.yaml
+  - path: deployment-patch.yaml
 
 configMapGenerator:
   - name: provider-info

@@ -3,10 +3,8 @@ kind: Kustomization
 
 namespace: greenfield
 
-bases:
-  - ../../base
-
 resources:
+  - ../../base
   # Include Keycloak as primary IdP
   - ../../base/keycloak
 
