@@ -12,6 +12,46 @@ The Greenfield Cluster supports the following authentication providers:
 - **Okta** - Okta SAML via Keycloak broker
 - **Keycloak** - Self-hosted identity provider
 
+```mermaid
+graph LR
+    subgraph "OIDC Providers (Direct)"
+        AzureAD[Azure AD]
+        Google[Google]
+        GitHub[GitHub]
+    end
+    
+    subgraph "SAML Provider (via Broker)"
+        Okta[Okta SAML]
+        Keycloak[Keycloak Broker]
+        Okta --> Keycloak
+    end
+    
+    subgraph "Primary IdP"
+        KeycloakPrimary[Keycloak Primary]
+    end
+    
+    subgraph "Cluster Auth Layer"
+        OAuth2Proxy[oauth2-proxy]
+    end
+    
+    AzureAD -.-> OAuth2Proxy
+    Google -.-> OAuth2Proxy
+    GitHub -.-> OAuth2Proxy
+    Keycloak -.-> OAuth2Proxy
+    KeycloakPrimary -.-> OAuth2Proxy
+    
+    OAuth2Proxy --> Apps[Protected Applications]
+    
+    style AzureAD fill:#e1f5ff
+    style Google fill:#e1f5ff
+    style GitHub fill:#e1f5ff
+    style Okta fill:#fff4e1
+    style Keycloak fill:#f3e5f5
+    style KeycloakPrimary fill:#f3e5f5
+    style OAuth2Proxy fill:#e1f5ff
+    style Apps fill:#e8f5e9
+```
+
 ## Quick Setup Matrix
 
 | Provider | Setup Time | Complexity | Group Support | Best For |
@@ -202,9 +242,36 @@ curl -I https://myapp.example.com
 - Okta account with admin access
 - PostgreSQL database (included in greenfield cluster)
 
-### Step-by-Step
+### Architecture
 
 This setup uses Keycloak as a broker to convert Okta SAML to OIDC.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Gateway as Istio Gateway
+    participant OAuth2 as oauth2-proxy
+    participant Keycloak
+    participant Okta as Okta SAML
+
+    User->>Gateway: 1. Request app
+    Gateway->>OAuth2: 2. Check auth
+    OAuth2->>User: 3. Redirect to Keycloak
+    User->>Keycloak: 4. Login request
+    Keycloak->>User: 5. Redirect to Okta
+    User->>Okta: 6. SAML login
+    Okta->>User: 7. SAML response
+    User->>Keycloak: 8. SAML assertion
+    Keycloak->>Keycloak: 9. Convert SAML→OIDC
+    Keycloak->>User: 10. OIDC token + redirect
+    User->>OAuth2: 11. OIDC callback
+    OAuth2->>OAuth2: 12. Create session
+    OAuth2->>User: 13. Redirect to app
+    User->>Gateway: 14. Access with session
+    Gateway->>Gateway: 15. Validate + forward
+```
+
+### Step-by-Step
 
 1. **Deploy Keycloak**
    ```bash

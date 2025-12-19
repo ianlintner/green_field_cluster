@@ -4,6 +4,69 @@ This module provides a modular, drop-in authentication architecture for Kubernet
 
 ## Architecture Overview
 
+```mermaid
+graph TB
+    subgraph "Identity Providers"
+        Azure[Azure AD]
+        Google[Google]
+        GitHub[GitHub]
+        Okta[Okta SAML]
+    end
+    
+    subgraph "Platform Auth Module"
+        subgraph "Base Components"
+            OAuth2[oauth2-proxy<br/>Deployment + Service]
+            Keycloak[Keycloak<br/>StatefulSet + Service<br/>Optional]
+            Gateway[Gateway Config<br/>EnvoyFilter]
+            Policies[Policy Templates<br/>RequestAuth + AuthZ]
+        end
+        
+        subgraph "Provider Overlays"
+            OverlayAzure[provider-azuread]
+            OverlayGoogle[provider-google]
+            OverlayGitHub[provider-github]
+            OverlayOkta[provider-okta-saml]
+            OverlayKeycloak[keycloak-enabled]
+        end
+    end
+    
+    subgraph "Protected Applications"
+        App1[App 1]
+        App2[App 2]
+        App3[App 3]
+    end
+    
+    Azure -.OIDC.-> OverlayAzure
+    Google -.OIDC.-> OverlayGoogle
+    GitHub -.OAuth2.-> OverlayGitHub
+    Okta -.SAML.-> OverlayOkta
+    
+    OverlayAzure --> OAuth2
+    OverlayGoogle --> OAuth2
+    OverlayGitHub --> OAuth2
+    OverlayOkta --> Keycloak
+    OverlayKeycloak --> Keycloak
+    Keycloak -.OIDC.-> OAuth2
+    
+    OAuth2 --> Gateway
+    Gateway --> Policies
+    Policies --> App1
+    Policies --> App2
+    Policies --> App3
+    
+    style Azure fill:#e1f5ff
+    style Google fill:#e1f5ff
+    style GitHub fill:#e1f5ff
+    style Okta fill:#fff4e1
+    style OAuth2 fill:#e1f5ff
+    style Keycloak fill:#f3e5f5
+    style Gateway fill:#fff9c4
+    style Policies fill:#fff9c4
+    style App1 fill:#e8f5e9
+    style App2 fill:#e8f5e9
+    style App3 fill:#e8f5e9
+```
+
 The auth module supports three deployment modes:
 
 ### Mode A - OIDC-first (Recommended Default)
