@@ -143,9 +143,9 @@ if [ -f "${CONFIGMAP_FILE}" ]; then
     # Create backup
     cp "${CONFIGMAP_FILE}" "${CONFIGMAP_FILE}.bak"
     
-    # Update domain placeholders
-    sed -i.tmp "s/example\\.com/${DOMAIN}/g" "${CONFIGMAP_FILE}"
-    rm -f "${CONFIGMAP_FILE}.tmp"
+    # Update domain placeholders (portable sed syntax)
+    sed "s/example\\.com/${DOMAIN}/g" "${CONFIGMAP_FILE}" > "${CONFIGMAP_FILE}.tmp"
+    mv "${CONFIGMAP_FILE}.tmp" "${CONFIGMAP_FILE}"
     
     echo -e "${GREEN}✓ Updated domain in ${CONFIGMAP_FILE}${NC}"
 fi

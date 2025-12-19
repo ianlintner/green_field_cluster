@@ -1,4 +1,6 @@
 #!/bin/bash
+# Note: This script intentionally does NOT use 'set -e' so it can continue
+# checking all components and report a complete summary, even if some checks fail
 
 # auth-doctor.sh - Diagnose authentication setup and verify configuration
 #
