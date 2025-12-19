@@ -1,0 +1,344 @@
+#!/bin/bash
+set -e
+
+# auth-protect.sh - Protect an application with authentication
+#
+# Usage: ./scripts/auth-protect.sh APP HOST POLICY
+# Example: ./scripts/auth-protect.sh myapp myapp.example.com "group:developers"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+usage() {
+    echo "Usage: $0 APP HOST POLICY"
+    echo ""
+    echo "Protect an application with authentication"
+    echo ""
+    echo "Arguments:"
+    echo "  APP      Application name (used for labels and resource names)"
+    echo "  HOST     Application hostname (e.g., myapp.example.com)"
+    echo "  POLICY   Authorization policy (format: type:value)"
+    echo ""
+    echo "Policy Types:"
+    echo "  group:GROUP_NAME       - Restrict to users in specific group"
+    echo "  domain:DOMAIN          - Restrict to users from email domain"
+    echo "  email:EMAIL            - Allow specific email address"
+    echo "  public                 - Allow all authenticated users"
+    echo ""
+    echo "Examples:"
+    echo "  $0 myapp myapp.example.com \"group:developers\""
+    echo "  $0 admin admin.example.com \"group:admins\""
+    echo "  $0 blog blog.example.com \"domain:example.com\""
+    echo "  $0 docs docs.example.com \"public\""
+    echo ""
+    exit 1
+}
+
+# Check arguments
+if [ $# -ne 3 ]; then
+    usage
+fi
+
+APP=$1
+HOST=$2
+POLICY=$3
+
+echo -e "${GREEN}Protecting application with authentication...${NC}"
+echo "App: ${APP}"
+echo "Host: ${HOST}"
+echo "Policy: ${POLICY}"
+echo ""
+
+# Check if kubectl is available
+if ! command -v kubectl &> /dev/null; then
+    echo -e "${RED}Error: kubectl not found. Please install kubectl first.${NC}"
+    exit 1
+fi
+
+# Create app directory if it doesn't exist
+APP_DIR="${REPO_ROOT}/apps/${APP}"
+mkdir -p "${APP_DIR}"
+
+echo -e "${YELLOW}Step 1: Getting provider configuration...${NC}"
+
+# Try to detect installed provider
+PROVIDER_INFO=$(kubectl get configmap provider-info -n greenfield -o jsonpath='{.data.provider}' 2>/dev/null || echo "")
+ISSUER_URL=$(kubectl get configmap provider-info -n greenfield -o jsonpath='{.data.issuer-url}' 2>/dev/null || echo "")
+
+if [ -z "${PROVIDER_INFO}" ]; then
+    echo -e "${RED}Error: No auth provider found. Please install auth module first.${NC}"
+    echo "Run: ./scripts/auth-install.sh PROVIDER DOMAIN"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ Found provider: ${PROVIDER_INFO}${NC}"
+
+# Get oauth2-proxy client ID from secret (or use placeholder)
+CLIENT_ID=$(kubectl get secret oauth2-proxy-secret -n greenfield -o jsonpath='{.data.client-id}' 2>/dev/null | base64 -d || echo "YOUR_CLIENT_ID")
+
+echo -e "${YELLOW}Step 2: Generating auth configuration...${NC}"
+
+# Parse policy
+POLICY_TYPE=$(echo "${POLICY}" | cut -d: -f1)
+POLICY_VALUE=$(echo "${POLICY}" | cut -d: -f2-)
+
+# Generate authorization policy based on type
+AUTH_POLICY=""
+case ${POLICY_TYPE} in
+    group)
+        AUTH_POLICY="
+---
+# AuthorizationPolicy - Group-based access control
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ${APP}-group-access
+  namespace: greenfield
+  labels:
+    app: ${APP}
+spec:
+  selector:
+    matchLabels:
+      app: ${APP}
+  action: ALLOW
+  rules:
+  - when:
+    - key: request.auth.claims[groups]
+      values:
+      - \"${POLICY_VALUE}\"
+"
+        ;;
+    domain)
+        AUTH_POLICY="
+---
+# AuthorizationPolicy - Email domain restriction
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ${APP}-domain-access
+  namespace: greenfield
+  labels:
+    app: ${APP}
+spec:
+  selector:
+    matchLabels:
+      app: ${APP}
+  action: ALLOW
+  rules:
+  - when:
+    - key: request.auth.claims[email]
+      values:
+      - \"*@${POLICY_VALUE}\"
+"
+        ;;
+    email)
+        AUTH_POLICY="
+---
+# AuthorizationPolicy - Specific email access
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ${APP}-email-access
+  namespace: greenfield
+  labels:
+    app: ${APP}
+spec:
+  selector:
+    matchLabels:
+      app: ${APP}
+  action: ALLOW
+  rules:
+  - when:
+    - key: request.auth.claims[email]
+      values:
+      - \"${POLICY_VALUE}\"
+"
+        ;;
+    public)
+        AUTH_POLICY="
+---
+# AuthorizationPolicy - Allow all authenticated users
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ${APP}-authenticated-access
+  namespace: greenfield
+  labels:
+    app: ${APP}
+spec:
+  selector:
+    matchLabels:
+      app: ${APP}
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        requestPrincipals: [\"*\"]
+"
+        ;;
+    *)
+        echo -e "${RED}Error: Invalid policy type '${POLICY_TYPE}'${NC}"
+        echo "Valid types: group, domain, email, public"
+        exit 1
+        ;;
+esac
+
+# Create auth configuration file
+AUTH_FILE="${APP_DIR}/auth.yaml"
+cat > "${AUTH_FILE}" << EOF
+# Authentication configuration for ${APP}
+# Generated by auth-protect.sh
+#
+# App: ${APP}
+# Host: ${HOST}
+# Policy: ${POLICY}
+# Provider: ${PROVIDER_INFO}
+
+---
+# VirtualService - Routes traffic through Istio gateway with authentication
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: ${APP}
+  namespace: greenfield
+  labels:
+    app: ${APP}
+    auth-enabled: "true"
+spec:
+  hosts:
+  - "${HOST}"
+  gateways:
+  - istio-system/auth-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/"
+    route:
+    - destination:
+        host: ${APP}
+        port:
+          number: 8080
+    headers:
+      request:
+        set:
+          x-forwarded-user: "%REQ(x-auth-request-user)%"
+          x-forwarded-email: "%REQ(x-auth-request-email)%"
+          x-forwarded-access-token: "%REQ(x-auth-request-access-token)%"
+
+---
+# RequestAuthentication - Validates JWT tokens
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: ${APP}-jwt
+  namespace: greenfield
+  labels:
+    app: ${APP}
+spec:
+  selector:
+    matchLabels:
+      app: ${APP}
+  jwtRules:
+  - issuer: "${ISSUER_URL}"
+    jwksUri: "${ISSUER_URL}/.well-known/jwks.json"
+    audiences:
+    - "${CLIENT_ID}"
+    forwardOriginalToken: true
+    outputPayloadToHeader: "x-jwt-payload"
+
+---
+# AuthorizationPolicy - Allow public health/metrics endpoints
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ${APP}-public-paths
+  namespace: greenfield
+  labels:
+    app: ${APP}
+spec:
+  selector:
+    matchLabels:
+      app: ${APP}
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        paths:
+        - "/health"
+        - "/healthz"
+        - "/ready"
+        - "/readyz"
+        - "/metrics"
+        - "/livez"
+
+---
+# AuthorizationPolicy - Require JWT for all other paths
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ${APP}-require-jwt
+  namespace: greenfield
+  labels:
+    app: ${APP}
+spec:
+  selector:
+    matchLabels:
+      app: ${APP}
+  action: DENY
+  rules:
+  - from:
+    - source:
+        notRequestPrincipals: ["*"]
+${AUTH_POLICY}
+EOF
+
+echo -e "${GREEN}✓ Created auth configuration: ${AUTH_FILE}${NC}"
+
+echo -e "${YELLOW}Step 3: Applying configuration...${NC}"
+
+# Dry run first
+echo ""
+echo "The following resources will be created:"
+kubectl apply -f "${AUTH_FILE}" --dry-run=client
+
+echo ""
+read -p "Do you want to proceed? (y/n) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${YELLOW}Operation cancelled. Configuration saved to ${AUTH_FILE}${NC}"
+    exit 0
+fi
+
+# Apply configuration
+kubectl apply -f "${AUTH_FILE}"
+
+echo ""
+echo -e "${GREEN}✓ Application protected successfully!${NC}"
+echo ""
+echo -e "${YELLOW}Next steps:${NC}"
+echo "1. Ensure your app deployment has the label: app=${APP}"
+echo "2. Update DNS to point ${HOST} to your Istio ingress"
+echo "3. Test authentication:"
+echo "   curl -I https://${HOST}"
+echo "   (Should redirect to authentication provider)"
+echo ""
+echo "4. View configuration:"
+echo "   cat ${AUTH_FILE}"
+echo ""
+echo "5. Check policy status:"
+echo "   kubectl get authorizationpolicy -n greenfield -l app=${APP}"
+echo "   kubectl get requestauthentication -n greenfield -l app=${APP}"
+echo ""
+
+# Show created resources
+echo -e "${YELLOW}Created resources:${NC}"
+kubectl get virtualservice,requestauthentication,authorizationpolicy -n greenfield -l app=${APP}
+
+echo ""
+echo -e "${GREEN}Protection complete!${NC}"

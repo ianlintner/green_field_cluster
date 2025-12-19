@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: greenfield
+spec:
+  template:
+    spec:
+      containers:
+      - name: oauth2-proxy
+        env:
+        - name: OAUTH2_PROXY_PROVIDER
+          value: "github"
+        # Restrict to specific GitHub organization
+        - name: OAUTH2_PROXY_GITHUB_ORG
+          valueFrom:
+            configMapKeyRef:
+              name: oauth2-proxy-config
+              key: github-org
+              optional: true
+        # Restrict to specific GitHub team (requires org)
+        - name: OAUTH2_PROXY_GITHUB_TEAM
+          valueFrom:
+            configMapKeyRef:
+              name: oauth2-proxy-config
+              key: github-team
+              optional: true

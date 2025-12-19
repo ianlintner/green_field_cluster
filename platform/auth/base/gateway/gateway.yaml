@@ -1,0 +1,30 @@
+# Example Gateway configuration for authenticated apps
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: auth-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+    gateway-type: external
+  servers:
+  # HTTP server for ACME challenges and HTTP to HTTPS redirect
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*.example.com"
+    tls:
+      httpsRedirect: true
+  # HTTPS server with TLS termination
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: auth-tls-cert
+    hosts:
+    - "*.example.com"

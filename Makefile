@@ -1,6 +1,6 @@
 # Makefile for Greenfield Cluster
 
-.PHONY: help validate build-kustomize build-base build-dev build-staging build-prod deploy-dev deploy-staging deploy-prod clean test install-prerequisites install-cert-issuers test-kind-cluster kind-create kind-delete
+.PHONY: help validate build-kustomize build-base build-dev build-staging build-prod deploy-dev deploy-staging deploy-prod clean test install-prerequisites install-cert-issuers test-kind-cluster kind-create kind-delete auth.install auth.protect auth.add-provider auth.doctor
 
 # Default target
 help:
@@ -36,6 +36,12 @@ help:
 	@echo "  make kind-create        - Create a local Kind cluster"
 	@echo "  make kind-delete        - Delete the local Kind cluster"
 	@echo "  make port-forward       - Set up port forwarding for all services"
+	@echo ""
+	@echo "Authentication:"
+	@echo "  make auth.install PROVIDER=<provider> DOMAIN=<domain> - Install auth module"
+	@echo "  make auth.protect APP=<app> HOST=<host> POLICY=<policy> - Protect an app"
+	@echo "  make auth.add-provider PROVIDER=<provider> - Add new provider"
+	@echo "  make auth.doctor        - Verify authentication setup"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean-dev          - Remove dev deployment"
@@ -200,3 +206,22 @@ kind-delete:
 	@echo "Deleting Kind cluster..."
 	@kind delete cluster --name greenfield-test || echo "Cluster doesn't exist"
 	@echo "✓ Kind cluster deleted"
+
+# Authentication targets
+auth.install:
+	@test -n "$(PROVIDER)" || (echo "Error: PROVIDER not set. Usage: make auth.install PROVIDER=azuread DOMAIN=example.com" && exit 1)
+	@test -n "$(DOMAIN)" || (echo "Error: DOMAIN not set. Usage: make auth.install PROVIDER=azuread DOMAIN=example.com" && exit 1)
+	@./scripts/auth-install.sh $(PROVIDER) $(DOMAIN)
+
+auth.protect:
+	@test -n "$(APP)" || (echo "Error: APP not set. Usage: make auth.protect APP=myapp HOST=myapp.example.com POLICY=group:developers" && exit 1)
+	@test -n "$(HOST)" || (echo "Error: HOST not set. Usage: make auth.protect APP=myapp HOST=myapp.example.com POLICY=group:developers" && exit 1)
+	@test -n "$(POLICY)" || (echo "Error: POLICY not set. Usage: make auth.protect APP=myapp HOST=myapp.example.com POLICY=group:developers" && exit 1)
+	@./scripts/auth-protect.sh $(APP) $(HOST) "$(POLICY)"
+
+auth.add-provider:
+	@test -n "$(PROVIDER)" || (echo "Error: PROVIDER not set. Usage: make auth.add-provider PROVIDER=auth0" && exit 1)
+	@./scripts/auth-add-provider.sh $(PROVIDER)
+
+auth.doctor:
+	@./scripts/auth-doctor.sh

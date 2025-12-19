@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-proxy-config
+  namespace: greenfield
+data:
+  # Google OIDC Configuration
+  oidc-issuer-url: "https://accounts.google.com"
+  redirect-url: "https://auth.example.com/oauth2/callback"
+  cookie-domains: ".example.com"
+  whitelist-domains: ".example.com"
+  # Google specific - restrict to specific domain
+  google-admin-email: ""
+  google-service-account-json: ""

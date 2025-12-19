@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: greenfield
+spec:
+  template:
+    spec:
+      containers:
+      - name: oauth2-proxy
+        env:
+        - name: OAUTH2_PROXY_PROVIDER
+          value: "oidc"
+        # Keycloak acts as OIDC provider (brokering Okta SAML)
+        - name: OAUTH2_PROXY_OIDC_ISSUER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: oauth2-proxy-config
+              key: oidc-issuer-url
+        # Enable group claims from Keycloak
+        - name: OAUTH2_PROXY_OIDC_GROUPS_CLAIM
+          value: "groups"

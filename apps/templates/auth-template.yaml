@@ -1,0 +1,180 @@
+# Authentication Template for Applications
+# This template provides a complete authentication setup for an application
+#
+# Usage:
+#   1. Copy this file to your app directory: apps/<app-name>/auth.yaml
+#   2. Replace placeholders:
+#      - APP_NAME: Your application name
+#      - APP_HOST: Your application hostname (e.g., myapp.example.com)
+#      - APP_LABEL: Label selector for your app pods
+#      - PROVIDER_ISSUER: Your OIDC provider issuer URL
+#      - CLIENT_ID: Your OAuth client ID
+#      - ALLOWED_GROUPS: Comma-separated list of allowed groups
+#   3. Apply: kubectl apply -f apps/<app-name>/auth.yaml
+
+---
+# VirtualService - Routes traffic through Istio gateway with authentication
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: APP_NAME
+  namespace: greenfield
+  labels:
+    app: APP_NAME
+    auth-enabled: "true"
+spec:
+  hosts:
+  - "APP_HOST"
+  gateways:
+  - istio-system/auth-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/"
+    route:
+    - destination:
+        host: APP_NAME
+        port:
+          number: 8080
+    headers:
+      request:
+        # Forward authentication headers to application
+        set:
+          x-forwarded-user: "%REQ(x-auth-request-user)%"
+          x-forwarded-email: "%REQ(x-auth-request-email)%"
+          x-forwarded-access-token: "%REQ(x-auth-request-access-token)%"
+
+---
+# RequestAuthentication - Validates JWT tokens from the OIDC provider
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: APP_NAME-jwt
+  namespace: greenfield
+  labels:
+    app: APP_NAME
+spec:
+  selector:
+    matchLabels:
+      app: APP_LABEL
+  jwtRules:
+  - issuer: "PROVIDER_ISSUER"
+    # JWKS URI - automatically discovered from issuer
+    jwksUri: "PROVIDER_ISSUER/.well-known/jwks.json"
+    audiences:
+    - "CLIENT_ID"
+    forwardOriginalToken: true
+    outputPayloadToHeader: "x-jwt-payload"
+
+---
+# AuthorizationPolicy - Allow unauthenticated access to health/metrics
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: APP_NAME-public-paths
+  namespace: greenfield
+  labels:
+    app: APP_NAME
+spec:
+  selector:
+    matchLabels:
+      app: APP_LABEL
+  action: ALLOW
+  rules:
+  # Allow access to health and metrics endpoints without authentication
+  - to:
+    - operation:
+        paths:
+        - "/health"
+        - "/healthz"
+        - "/ready"
+        - "/readyz"
+        - "/metrics"
+        - "/livez"
+
+---
+# AuthorizationPolicy - Require valid JWT for all other paths
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: APP_NAME-require-jwt
+  namespace: greenfield
+  labels:
+    app: APP_NAME
+spec:
+  selector:
+    matchLabels:
+      app: APP_LABEL
+  action: DENY
+  rules:
+  # Deny requests without valid JWT (except public paths handled above)
+  - from:
+    - source:
+        notRequestPrincipals: ["*"]
+
+---
+# AuthorizationPolicy - Group-based access control
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: APP_NAME-group-access
+  namespace: greenfield
+  labels:
+    app: APP_NAME
+spec:
+  selector:
+    matchLabels:
+      app: APP_LABEL
+  action: ALLOW
+  rules:
+  # Allow users in specific groups
+  - when:
+    - key: request.auth.claims[groups]
+      values:
+      - "ALLOWED_GROUPS"  # Replace with actual group names
+      # Examples:
+      # - "admins"
+      # - "developers"
+      # - "12345678-1234-1234-1234-123456789012"  # Azure AD group Object ID
+
+---
+# AuthorizationPolicy - Admin-only routes (optional)
+# Uncomment and configure if you have admin-specific routes
+# apiVersion: security.istio.io/v1beta1
+# kind: AuthorizationPolicy
+# metadata:
+#   name: APP_NAME-admin-routes
+#   namespace: greenfield
+#   labels:
+#     app: APP_NAME
+# spec:
+#   selector:
+#     matchLabels:
+#       app: APP_LABEL
+#   action: ALLOW
+#   rules:
+#   - to:
+#     - operation:
+#         paths:
+#         - "/admin/*"
+#         - "/api/admin/*"
+#     when:
+#     - key: request.auth.claims[groups]
+#       values:
+#       - "admins"
+
+---
+# Certificate - SSL/TLS certificate for the application (optional)
+# Uncomment if you want cert-manager to issue a certificate
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: APP_NAME-tls
+#   namespace: greenfield
+# spec:
+#   secretName: APP_NAME-tls-cert
+#   issuerRef:
+#     name: letsencrypt-prod
+#     kind: ClusterIssuer
+#   dnsNames:
+#   - APP_HOST

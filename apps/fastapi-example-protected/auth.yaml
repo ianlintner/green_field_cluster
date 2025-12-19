@@ -1,0 +1,126 @@
+# Authentication configuration for fastapi-app
+# This example shows how to protect the FastAPI application with authentication
+
+---
+# VirtualService - Routes traffic through Istio gateway with authentication
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: fastapi-app
+  namespace: greenfield
+  labels:
+    app: fastapi-app
+    auth-enabled: "true"
+spec:
+  hosts:
+  - "fastapi.example.com"
+  gateways:
+  - istio-system/auth-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/"
+    route:
+    - destination:
+        host: fastapi-app
+        port:
+          number: 8000
+    headers:
+      request:
+        set:
+          x-forwarded-user: "%REQ(x-auth-request-user)%"
+          x-forwarded-email: "%REQ(x-auth-request-email)%"
+          x-forwarded-access-token: "%REQ(x-auth-request-access-token)%"
+
+---
+# RequestAuthentication - Validates JWT tokens from Azure AD
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: fastapi-app-jwt
+  namespace: greenfield
+  labels:
+    app: fastapi-app
+spec:
+  selector:
+    matchLabels:
+      app: fastapi-app
+  jwtRules:
+  - issuer: "https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0"
+    jwksUri: "https://login.microsoftonline.com/YOUR_TENANT_ID/discovery/v2.0/keys"
+    audiences:
+    - "YOUR_CLIENT_ID"
+    forwardOriginalToken: true
+    outputPayloadToHeader: "x-jwt-payload"
+
+---
+# AuthorizationPolicy - Allow public health/metrics endpoints
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: fastapi-app-public-paths
+  namespace: greenfield
+  labels:
+    app: fastapi-app
+spec:
+  selector:
+    matchLabels:
+      app: fastapi-app
+  action: ALLOW
+  rules:
+  # Allow access to health and metrics endpoints without authentication
+  - to:
+    - operation:
+        paths:
+        - "/health"
+        - "/healthz"
+        - "/ready"
+        - "/readyz"
+        - "/metrics"
+        - "/docs"  # OpenAPI docs
+        - "/openapi.json"
+
+---
+# AuthorizationPolicy - Require valid JWT for all other paths
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: fastapi-app-require-jwt
+  namespace: greenfield
+  labels:
+    app: fastapi-app
+spec:
+  selector:
+    matchLabels:
+      app: fastapi-app
+  action: DENY
+  rules:
+  # Deny requests without valid JWT (except public paths handled above)
+  - from:
+    - source:
+        notRequestPrincipals: ["*"]
+
+---
+# AuthorizationPolicy - Group-based access control
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: fastapi-app-group-access
+  namespace: greenfield
+  labels:
+    app: fastapi-app
+spec:
+  selector:
+    matchLabels:
+      app: fastapi-app
+  action: ALLOW
+  rules:
+  # Allow users in developers group
+  - when:
+    - key: request.auth.claims[groups]
+      values:
+      - "developers"
+      # Add more groups as needed
+      # - "admins"
+      # For Azure AD, can use group Object IDs:
+      # - "12345678-1234-1234-1234-123456789012"

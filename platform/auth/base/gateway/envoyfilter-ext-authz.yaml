@@ -1,0 +1,56 @@
+apiVersion: networking.istio.io/v1beta1
+kind: EnvoyFilter
+metadata:
+  name: oauth2-proxy-ext-authz
+  namespace: istio-system
+spec:
+  workloadSelector:
+    labels:
+      istio: ingressgateway
+  configPatches:
+  # Add the ext_authz HTTP filter
+  - applyTo: HTTP_FILTER
+    match:
+      context: GATEWAY
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+            subFilter:
+              name: "envoy.filters.http.router"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.ext_authz
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.HttpService
+          http_service:
+            server_uri:
+              uri: http://oauth2-proxy.greenfield.svc.cluster.local:4180
+              cluster: outbound|4180||oauth2-proxy.greenfield.svc.cluster.local
+              timeout: 10s
+            authorization_request:
+              allowed_headers:
+                patterns:
+                - exact: "cookie"
+                - exact: "authorization"
+                - exact: "x-forwarded-for"
+                - exact: "x-forwarded-proto"
+                - exact: "x-forwarded-host"
+            authorization_response:
+              allowed_upstream_headers:
+                patterns:
+                - exact: "x-auth-request-user"
+                - exact: "x-auth-request-email"
+                - exact: "x-auth-request-access-token"
+                - exact: "authorization"
+              allowed_client_headers:
+                patterns:
+                - exact: "set-cookie"
+                - exact: "location"
+          status_on_error:
+            code: 503
+          failure_mode_allow: false
+          with_request_body:
+            max_request_bytes: 8192
+            allow_partial_message: true
