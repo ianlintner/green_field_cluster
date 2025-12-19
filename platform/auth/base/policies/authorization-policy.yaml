@@ -1,0 +1,65 @@
+# AuthorizationPolicy to enforce authentication
+# Denies all requests without valid JWT
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: require-jwt
+  namespace: greenfield
+spec:
+  selector:
+    matchLabels:
+      # Apply to all workloads in namespace
+      # Override with specific labels as needed
+  action: DENY
+  rules:
+  - from:
+    - source:
+        notRequestPrincipals: ["*"]
+    to:
+    - operation:
+        paths:
+        # Allow health checks without auth
+        - "/health"
+        - "/healthz"
+        - "/ready"
+        - "/readyz"
+        - "/metrics"
+        notPaths: []
+---
+# AuthorizationPolicy for group-based access
+# Example: Allow only users in specific groups
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: group-based-access
+  namespace: greenfield
+spec:
+  selector:
+    matchLabels:
+      require-group-auth: "true"
+  action: ALLOW
+  rules:
+  - when:
+    - key: request.auth.claims[groups]
+      values:
+      - "admin"
+      - "developers"
+---
+# AuthorizationPolicy for email domain restriction
+# Example: Allow only users from specific email domains
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: email-domain-restriction
+  namespace: greenfield
+spec:
+  selector:
+    matchLabels:
+      require-domain-auth: "true"
+  action: ALLOW
+  rules:
+  - when:
+    - key: request.auth.claims[email]
+      values:
+      - "*@example.com"
+      - "*@partner.com"

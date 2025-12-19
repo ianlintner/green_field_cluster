@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: greenfield
+
+bases:
+  - ../../base
+
+patchesStrategicMerge:
+  - configmap.yaml
+  - deployment-patch.yaml
+
+configMapGenerator:
+  - name: provider-info
+    literals:
+      - provider=github
+      - provider-type=oauth2
+      - issuer-url=https://github.com
+
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,0 +1,19 @@
+# RequestAuthentication for JWT validation
+# This validates JWT tokens from the OIDC provider
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: jwt-auth
+  namespace: greenfield
+spec:
+  selector:
+    matchLabels:
+      # Apply to all workloads in namespace by default
+      # Override with specific labels as needed
+  jwtRules:
+  - issuer: "https://example.com/oauth2/default"
+    jwksUri: "https://example.com/oauth2/default/v1/keys"
+    audiences:
+    - "your-client-id"
+    forwardOriginalToken: true
+    outputPayloadToHeader: "x-jwt-payload"

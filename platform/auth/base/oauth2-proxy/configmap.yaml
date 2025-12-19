@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-proxy-config
+  namespace: greenfield
+  labels:
+    app: oauth2-proxy
+data:
+  # These values should be overridden in provider-specific overlays
+  oidc-issuer-url: "https://example.com/oauth2/default"
+  redirect-url: "https://auth.example.com/oauth2/callback"
+  cookie-domains: ".example.com"
+  whitelist-domains: ".example.com"

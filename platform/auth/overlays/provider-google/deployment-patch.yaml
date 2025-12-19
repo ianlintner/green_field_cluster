@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: greenfield
+spec:
+  template:
+    spec:
+      containers:
+      - name: oauth2-proxy
+        env:
+        - name: OAUTH2_PROXY_PROVIDER
+          value: "google"
+        # Restrict to specific Google Workspace domain
+        - name: OAUTH2_PROXY_GOOGLE_GROUP
+          value: ""  # Optional: restrict to Google group
+        - name: OAUTH2_PROXY_GOOGLE_ADMIN_EMAIL
+          valueFrom:
+            configMapKeyRef:
+              name: oauth2-proxy-config
+              key: google-admin-email
+              optional: true

@@ -67,6 +67,11 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 - ✅ **Let's Encrypt Integration** - Staging and production issuers
 - ✅ **SSL Ingress** - External gateway with TLS termination
 - ✅ **Sealed Secrets** - Encrypted Kubernetes secrets
+- ✅ **Modular Authentication** - Drop-in SAML, OAuth2, OIDC support
+  - Azure AD, Google, GitHub, Okta integration
+  - oauth2-proxy with Istio ext_authz
+  - Optional Keycloak IdP broker
+  - Group-based authorization policies
 
 ### DevOps & Automation
 - ✅ **GitHub Actions CI** - Automated manifest validation
@@ -116,10 +121,19 @@ For detailed documentation, see [docs/README.md](docs/README.md)
 │       ├── dev/
 │       ├── staging/
 │       └── prod/
+├── platform/
+│   └── auth/              # Modular authentication
+│       ├── base/          # oauth2-proxy, Keycloak, policies
+│       └── overlays/      # Provider configs (Azure AD, Google, etc.)
 ├── helm/
 │   └── greenfield-cluster/ # Helm chart
 ├── apps/
-│   └── fastapi-example/   # Example FastAPI application
+│   ├── fastapi-example/   # Example FastAPI application
+│   └── templates/         # App protection templates
+├── scripts/               # Automation scripts
+│   ├── auth-install.sh
+│   ├── auth-protect.sh
+│   └── auth-doctor.sh
 └── docs/                  # Documentation
 
 ```
@@ -154,7 +168,32 @@ helm install greenfield helm/greenfield-cluster \
 
 ## 🔐 Security
 
-This project uses **Sealed Secrets** for encrypting Kubernetes secrets before storing them in Git. See [kustomize/base/sealed-secrets/README.md](kustomize/base/sealed-secrets/README.md) for setup instructions.
+This project includes comprehensive security features:
+
+### Secrets Management
+- **Sealed Secrets** for encrypting Kubernetes secrets before storing them in Git
+- See [kustomize/base/sealed-secrets/README.md](kustomize/base/sealed-secrets/README.md) for setup
+
+### Authentication & Authorization
+- **Modular Auth System** - Drop-in authentication for any HTTP application
+- **Multiple Providers** - Azure AD, Google, GitHub, Okta SAML, Keycloak
+- **Zero App Changes** - Authentication enforced at Istio ingress gateway
+- **Fine-Grained Access** - Group-based and domain-based authorization policies
+
+#### Quick Start with Authentication
+
+```bash
+# Install authentication with Azure AD
+make auth.install PROVIDER=azuread DOMAIN=example.com
+
+# Protect an application
+make auth.protect APP=myapp HOST=myapp.example.com POLICY=group:developers
+
+# Verify setup
+make auth.doctor
+```
+
+See [platform/auth/README.md](platform/auth/base/README.md) for detailed authentication documentation.
 
 ## 🧪 Testing
 

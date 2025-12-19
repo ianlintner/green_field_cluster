@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: greenfield
+
+bases:
+  - ../../base
+
+resources:
+  # Include Keycloak since it's required for SAML brokering
+  - ../../base/keycloak
+
+patchesStrategicMerge:
+  - configmap.yaml
+  - deployment-patch.yaml
+
+configMapGenerator:
+  - name: provider-info
+    literals:
+      - provider=okta-saml
+      - provider-type=saml-via-oidc
+      - broker=keycloak
+      - issuer-url=https://keycloak.example.com/auth/realms/master
+
+generatorOptions:
+  disableNameSuffixHash: true

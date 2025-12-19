@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-proxy-config
+  namespace: greenfield
+data:
+  # GitHub OIDC Configuration
+  oidc-issuer-url: "https://github.com"
+  redirect-url: "https://auth.example.com/oauth2/callback"
+  cookie-domains: ".example.com"
+  whitelist-domains: ".example.com"
+  # GitHub specific settings
+  github-org: ""
+  github-team: ""
