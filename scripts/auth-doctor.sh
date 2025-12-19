@@ -283,7 +283,7 @@ else
 fi
 
 echo ""
-echo "For more information, see: ${REPO_ROOT}/platform/auth/base/README.md"
+echo "For more information, see: ${REPO_ROOT}/kustomize/base/auth/base/README.md"
 echo ""
 
 exit ${ERRORS}

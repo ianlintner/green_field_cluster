@@ -66,7 +66,7 @@ if ! command -v kustomize &> /dev/null; then
 fi
 
 # Set overlay path
-OVERLAY_PATH="${REPO_ROOT}/platform/auth/overlays/provider-${PROVIDER}"
+OVERLAY_PATH="${REPO_ROOT}/kustomize/base/auth/overlays/provider-${PROVIDER}"
 
 # Check if overlay exists
 if [ ! -d "${OVERLAY_PATH}" ]; then
@@ -95,7 +95,7 @@ fi
 echo -e "${YELLOW}Step 3: Creating ExternalSecret/SealedSecret stubs...${NC}"
 
 # Create secret template file
-SECRET_FILE="${REPO_ROOT}/platform/auth/overlays/provider-${PROVIDER}/secret-stub.yaml"
+SECRET_FILE="${REPO_ROOT}/kustomize/base/auth/overlays/provider-${PROVIDER}/secret-stub.yaml"
 cat > "${SECRET_FILE}" << EOF
 # OAuth2 Proxy Secrets
 # 

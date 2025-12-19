@@ -156,7 +156,7 @@ make auth.doctor
 ### 7. Directory Structure
 
 ```
-platform/auth/
+kustomize/base/auth/
 ├── base/
 │   ├── oauth2-proxy/      # 6 files
 │   ├── keycloak/          # 4 files
@@ -348,7 +348,7 @@ make auth.protect APP=intranet HOST=intranet.enterprise.com POLICY=group:employe
 - Provider setup: `docs-mkdocs/docs/security/auth-providers.md`
 - Troubleshooting: `docs-mkdocs/docs/security/auth-troubleshooting.md`
 - Quick reference: `docs-mkdocs/docs/security/auth-quickref.md`
-- Base README: `platform/auth/base/README.md`
+- Base README: `kustomize/base/auth/base/README.md`
 - Templates: `apps/templates/README.md`
 
 ## Implementation Quality

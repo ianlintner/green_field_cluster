@@ -37,7 +37,7 @@ if [ $# -ne 1 ]; then
 fi
 
 PROVIDER=$1
-OVERLAY_DIR="${REPO_ROOT}/platform/auth/overlays/provider-${PROVIDER}"
+OVERLAY_DIR="${REPO_ROOT}/kustomize/base/auth/overlays/provider-${PROVIDER}"
 
 echo -e "${GREEN}Adding new authentication provider: ${PROVIDER}${NC}"
 echo ""
@@ -162,7 +162,7 @@ kubectl create secret generic oauth2-proxy-secret \\
 ### 3. Deploy
 
 \`\`\`bash
-kubectl apply -k platform/auth/overlays/provider-${PROVIDER}/
+kubectl apply -k kustomize/base/auth/overlays/provider-${PROVIDER}/
 \`\`\`
 
 ## Testing

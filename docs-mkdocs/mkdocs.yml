@@ -100,6 +100,11 @@ nav:
     - Overview: security/overview.md
     - Sealed Secrets: security/sealed-secrets.md
     - Best Practices: security/best-practices.md
+    - Authentication:
+      - Architecture: security/auth-architecture.md
+      - Provider Setup: security/auth-providers.md
+      - Quick Reference: security/auth-quickref.md
+      - Troubleshooting: security/auth-troubleshooting.md
   - Development:
     - Contributing: development/contributing.md
     - Testing: development/testing.md

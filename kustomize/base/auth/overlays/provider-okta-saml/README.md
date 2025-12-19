@@ -45,7 +45,7 @@ Configure these SAML attribute statements:
 
 ```bash
 # Update configmap.yaml with your domain
-kubectl apply -k platform/auth/overlays/provider-okta-saml/
+kubectl apply -k kustomize/base/auth/overlays/provider-okta-saml/
 ```
 
 ### 2. Create Secrets

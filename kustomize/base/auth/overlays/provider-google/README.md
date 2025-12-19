@@ -43,7 +43,7 @@ kubectl create secret generic oauth2-proxy-secret \
 ### 3. Deploy
 
 ```bash
-kubectl apply -k platform/auth/overlays/provider-google/
+kubectl apply -k kustomize/base/auth/overlays/provider-google/
 ```
 
 ## Domain Restriction
