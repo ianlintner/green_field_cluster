@@ -89,11 +89,14 @@ nav:
       - Kafka: components/kafka.md
     - Service Mesh:
       - Istio: components/istio.md
+    - Security:
+      - cert-manager: components/cert-manager.md
     - Observability:
       - OpenTelemetry: components/otel.md
       - Jaeger: components/jaeger.md
       - Prometheus: components/prometheus.md
       - Grafana: components/grafana.md
+      - Kiali: components/kiali.md
     - Application:
       - FastAPI Example: components/fastapi.md
   - Security:
