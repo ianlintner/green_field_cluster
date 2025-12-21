@@ -418,7 +418,7 @@ ipconfig /flushdns
 
 ## Cost Considerations
 
-Route 53 pricing (as of 2024):
+Route 53 pricing:
 - **Hosted Zone**: $0.50/month per zone
 - **Standard Queries**: $0.40 per million queries
 - **ALIAS Queries**: Free (to AWS resources)

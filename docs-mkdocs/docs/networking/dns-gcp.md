@@ -477,7 +477,7 @@ gcloud dns managed-zones create internal-zone \
 
 ## Cost Considerations
 
-Cloud DNS pricing (as of 2024):
+Cloud DNS pricing:
 - **Hosted Zone**: $0.20/month per zone
 - **DNS Queries**: First 1 billion queries/month: $0.40 per million queries
 - **Additional Queries**: $0.20 per million (over 1 billion)

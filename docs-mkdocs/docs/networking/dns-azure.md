@@ -442,7 +442,7 @@ az monitor activity-log list \
 
 ## Cost Considerations
 
-Azure DNS pricing (as of 2024):
+Azure DNS pricing:
 - **Hosted Zone**: $0.50/month per zone (first 25 zones)
 - **DNS Queries**: First 1 billion queries/month: $0.40 per million queries
 - **Additional Zones**: $0.10/month per zone (for zones 26-100)

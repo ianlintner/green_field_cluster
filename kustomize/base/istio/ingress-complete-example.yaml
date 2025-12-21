@@ -178,6 +178,7 @@ spec:
 # Requires DNS-01 challenge with DNS provider integration
 # Uncomment and configure DNS provider settings
 
+# Wildcard certificate covering all subdomains
 # apiVersion: cert-manager.io/v1
 # kind: Certificate
 # metadata:
@@ -194,7 +195,7 @@ spec:
 #   - "*.greenfieldcluster.example"
 #   - "greenfieldcluster.example"
 ---
-# Gateway with wildcard certificate
+# Gateway configuration that uses the wildcard certificate above
 # apiVersion: networking.istio.io/v1beta1
 # kind: Gateway
 # metadata:
