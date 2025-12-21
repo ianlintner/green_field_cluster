@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Monitor Docker images in Kubernetes/Kustomize base manifests
+  # Scans all subdirectories including mysql, postgres, mongodb, redis, kafka,
+  # prometheus, grafana, jaeger, keycloak, oauth2-proxy, kiali, etc.
+  - package-ecosystem: "docker"
+    directory: "/kustomize/base"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "docker"
+      - "kubernetes"
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
