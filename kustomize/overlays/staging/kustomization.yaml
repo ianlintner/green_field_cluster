@@ -22,5 +22,7 @@ replicas:
     count: 2
   - name: otel-collector
     count: 2
+  - name: kiali
+    count: 1
   - name: fastapi-app
     count: 2
