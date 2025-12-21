@@ -135,6 +135,8 @@ port-forward:
 	@kubectl port-forward -n greenfield svc/jaeger-query 16686:16686 &
 	@echo "Prometheus: http://localhost:9090"
 	@kubectl port-forward -n greenfield svc/prometheus 9090:9090 &
+	@echo "Kiali: http://localhost:20001/kiali"
+	@kubectl port-forward -n greenfield svc/kiali 20001:20001 &
 	@echo "✓ Port forwarding active"
 
 # Cleanup
