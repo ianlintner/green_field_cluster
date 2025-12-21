@@ -150,7 +150,7 @@ kind: Kustomization
 
 namespace: greenfield
 
-bases:
+resources:
   - ../../base
 
 replicas:

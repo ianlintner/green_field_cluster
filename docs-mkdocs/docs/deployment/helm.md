@@ -586,8 +586,8 @@ helm lint helm/greenfield-cluster --values my-values.yaml
 Use helm-diff plugin to see changes before upgrading:
 
 ```bash
-# Install plugin
-helm plugin install https://github.com/databus23/helm-diff
+# Install plugin (use specific version for security)
+helm plugin install https://github.com/databus23/helm-diff --version v3.9.0
 
 # Show diff
 helm diff upgrade greenfield helm/greenfield-cluster \

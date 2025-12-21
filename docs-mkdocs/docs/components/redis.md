@@ -513,8 +513,8 @@ user = r.get('user:1000')
 ### Session Store
 
 ```python
-# Store session
-r.hmset('session:abc123', {
+# Store session (use hset with mapping instead of deprecated hmset)
+r.hset('session:abc123', mapping={
     'user_id': '1000',
     'username': 'john',
     'last_activity': '2024-01-01T12:00:00'
