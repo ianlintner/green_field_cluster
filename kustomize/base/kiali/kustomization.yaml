@@ -10,4 +10,6 @@ resources:
 secretGenerator:
   - name: kiali
     literals:
+      # ⚠️ SECURITY WARNING: Default password for demonstration only
+      # DO NOT use in production! Change before deploying to non-dev environments
       - passphrase=changeme123

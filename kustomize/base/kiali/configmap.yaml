@@ -8,6 +8,8 @@ metadata:
 data:
   config.yaml: |
     auth:
+      # ⚠️ SECURITY WARNING: Anonymous auth is for development/demo only
+      # For production, change to 'token' or 'openid' for proper access control
       strategy: anonymous
     deployment:
       accessible_namespaces:

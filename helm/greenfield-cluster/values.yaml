@@ -190,8 +190,8 @@ kiali:
     repository: quay.io/kiali/kiali
     tag: v1.79.0
   auth:
-    strategy: anonymous
-  passphrase: changeme123
+    strategy: anonymous  # ⚠️ Change to 'token' or 'openid' for production
+  passphrase: changeme123  # ⚠️ CHANGE THIS! Use strong passphrase in production
   resources:
     requests:
       cpu: 100m

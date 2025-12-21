@@ -89,7 +89,6 @@ nav:
       - Kafka: components/kafka.md
     - Service Mesh:
       - Istio: components/istio.md
-    - Security:
       - cert-manager: components/cert-manager.md
     - Observability:
       - OpenTelemetry: components/otel.md

@@ -6,6 +6,11 @@ metadata:
   labels:
     app: kiali
 ---
+# ClusterRole for Kiali service mesh observability
+# Permissions include:
+# - Read access to all K8s resources for topology visualization
+# - Read/Write access to Istio resources for configuration management
+# - Write permissions enable Kiali wizards for traffic management, security policies, etc.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
