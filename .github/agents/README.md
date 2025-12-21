@@ -48,7 +48,7 @@ Frequently performed operations with ready-to-use commands and code examples.
 Comprehensive guide to kubectl, helm, kustomize, istioctl, and cloud CLI tools.
 
 ### [Quick Reference Cards](./quick-reference/)
-One-page cheat sheets for each domain area.
+One-page cheat sheets such as the kubectl cheatsheet, with additional domain-specific cards to be added over time.
 
 ## How to Use These Instructions
 

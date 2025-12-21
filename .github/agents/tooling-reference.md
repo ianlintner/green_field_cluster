@@ -660,7 +660,7 @@ kubectl describe pods my-pod
 
 # Delete resources
 kubectl delete -f ./pod.yaml
-kubectl delete pod unwanted --now
+kubectl delete pod unwanted
 
 # Execute a command on a pod
 kubectl exec my-pod -- ls /

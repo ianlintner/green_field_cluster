@@ -150,7 +150,7 @@ kubectl exec postgres-0 -n greenfield -- pg_dump -U postgres mydb > backup.sql
 
 # Restore database
 kubectl cp backup.sql greenfield/postgres-0:/tmp/backup.sql
-kubectl exec -it postgres-0 -n greenfield -- psql -U postgres mydb < /tmp/backup.sql
+kubectl exec -i postgres-0 -n greenfield -- psql -U postgres mydb < /tmp/backup.sql
 ```
 
 ### Redis

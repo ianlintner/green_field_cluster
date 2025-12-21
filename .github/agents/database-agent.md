@@ -100,7 +100,7 @@ kubectl exec -it -n greenfield postgres-0 -- pg_dump -U postgres mydb > backup.s
 
 # Restore database
 kubectl cp backup.sql greenfield/postgres-0:/tmp/backup.sql
-kubectl exec -it -n greenfield postgres-0 -- psql -U postgres mydb < /tmp/backup.sql
+kubectl exec -i -n greenfield postgres-0 -- psql -U postgres mydb < /tmp/backup.sql
 
 # Check replication status
 kubectl exec -it -n greenfield postgres-0 -- psql -U postgres -c "SELECT * FROM pg_stat_replication;"
@@ -157,7 +157,7 @@ kubectl exec -it -n greenfield mysql-0 -- mysqldump -u root -proot mydb > backup
 
 # Restore database
 kubectl cp backup.sql greenfield/mysql-0:/tmp/backup.sql
-kubectl exec -it -n greenfield mysql-0 -- mysql -u root -proot mydb < /tmp/backup.sql
+kubectl exec -i -n greenfield mysql-0 -- mysql -u root -proot mydb < /tmp/backup.sql
 ```
 
 ### 4. MongoDB Operations
