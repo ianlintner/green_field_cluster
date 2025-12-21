@@ -91,6 +91,7 @@ nav:
       - Istio: components/istio.md
       - cert-manager: components/cert-manager.md
     - Observability:
+      - Overview: observability/overview.md
       - OpenTelemetry: components/otel.md
       - Jaeger: components/jaeger.md
       - Prometheus: components/prometheus.md
