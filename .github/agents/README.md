@@ -100,6 +100,103 @@ AI models evolve rapidly. When using these instructions:
 - Newer models in the same family (e.g., Claude 4.x, GPT-5.x) will generally perform better
 - Test with your specific use cases to determine the best model for your needs
 
+## Recommended MCP Servers
+
+Model Context Protocol (MCP) servers enhance AI agents with specialized capabilities. These MCPs are particularly useful for VS Code and Copilot-compatible coding agents working with Kubernetes clusters.
+
+### Essential MCPs for Cluster Operations
+
+**File System & Code Access**
+- **@modelcontextprotocol/server-filesystem** - Access repository files, read configurations, and analyze manifests
+  - Essential for reading and modifying Kubernetes YAML files
+  - Navigate the `kustomize/` and `helm/` directories
+
+**Command Execution**
+- **@modelcontextprotocol/server-bash** - Execute kubectl, helm, kustomize, and other CLI commands
+  - Run diagnostic commands: `kubectl get pods`, `kubectl describe`
+  - Execute deployment commands: `kubectl apply -k`, `helm install`
+  - Query cluster state and resources
+
+**GitHub Integration**
+- **@modelcontextprotocol/server-github** - Interact with repository, PRs, issues, and GitHub Actions
+  - Review CI/CD workflow runs
+  - Check deployment status in GitHub Actions
+  - Manage issues and pull requests
+
+### Recommended MCPs for Enhanced Functionality
+
+**Database Operations**
+- **@modelcontextprotocol/server-postgres** - Direct PostgreSQL database access for debugging and queries
+- **@modelcontextprotocol/server-sqlite** - Local database operations for testing
+
+**Cloud Provider MCPs**
+- **AWS MCP Server** - Interact with AWS services (EKS, ECR, S3, CloudWatch)
+  - Query EKS cluster status
+  - Check CloudWatch logs and metrics
+  - Manage ECR container images
+- **Google Cloud MCP** - GCP operations (GKE, GCR, Cloud Storage)
+- **Azure MCP** - Azure services (AKS, ACR, Azure Monitor)
+
+**Web & API Access**
+- **@modelcontextprotocol/server-fetch** - Fetch documentation, API endpoints, and external resources
+  - Query Kubernetes API server directly
+  - Access Prometheus/Grafana APIs for metrics
+  - Fetch external documentation
+
+**Search & Documentation**
+- **@modelcontextprotocol/server-brave-search** - Search for solutions, documentation, and troubleshooting guides
+- **@modelcontextprotocol/server-exa** - Semantic search for technical documentation
+
+### MCP Configuration Example
+
+For VS Code with Copilot, configure MCPs in your settings:
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/runner/work/green_field_cluster/green_field_cluster"]
+    },
+    "bash": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-bash"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+### MCP Usage Guidelines
+
+**For Kubernetes Operations:**
+1. Use **filesystem MCP** to read manifests and configurations
+2. Use **bash MCP** to execute kubectl commands and debug cluster issues
+3. Use **github MCP** to review CI/CD workflows and deployment status
+
+**For Cloud Operations:**
+4. Use **cloud provider MCPs** (AWS/GCP/Azure) for cluster provisioning and management
+5. Use **fetch MCP** to query monitoring APIs (Prometheus, Grafana, Jaeger)
+
+**For Documentation & Troubleshooting:**
+6. Use **search MCPs** to find solutions for errors and issues
+7. Combine multiple MCPs for complex operations (e.g., filesystem + bash + github)
+
+### Security Considerations
+
+When using MCPs:
+- **Limit file system access** to repository directories only
+- **Use read-only tokens** for GitHub MCP when possible
+- **Rotate credentials** for cloud provider MCPs regularly
+- **Review MCP permissions** before granting access
+- **Use environment variables** for sensitive credentials (never hardcode)
+
 ## Cluster Context
 
 This Greenfield Cluster includes:
