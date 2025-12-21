@@ -248,6 +248,258 @@ Point users to:
 - Template Usage: `docs-mkdocs/docs/getting-started/template-usage.md`
 - Architecture: `docs-mkdocs/docs/components/architecture.md`
 - Security: `docs-mkdocs/docs/security/overview.md`
+- Observability: `docs-mkdocs/docs/observability/overview.md`
+- SLOs: `docs-mkdocs/docs/observability/slos.md`
+- Custom SLOs: `docs-mkdocs/docs/observability/custom-slos.md`
+- Alerts: `docs-mkdocs/docs/observability/alerts.md`
+- Logging: `docs-mkdocs/docs/observability/logging-integrations.md`
+
+## Observability and Incident Response
+
+### Full Stack Observability
+
+The cluster provides end-to-end observability for DevOps agents and incident response:
+
+**Metrics (Prometheus)**:
+- Cluster health SLOs (API server, nodes, scheduling)
+- Application SLOs (error rate, latency, saturation)
+- Custom business metrics
+- Resource utilization
+
+**Traces (Jaeger + OpenTelemetry)**:
+- Distributed tracing across services
+- Service-to-service call visualization
+- Performance bottleneck identification
+- Error propagation tracking
+
+**Logs (Structured JSON)**:
+- ECS-compatible format
+- Trace correlation (trace_id in logs)
+- Machine-readable for agent analysis
+- Integration with major platforms (Splunk, ELK, GCP, AWS, Loki)
+
+### Agent-Assisted Incident Response
+
+When helping users with incidents, follow this workflow:
+
+#### 1. Gather Context
+
+Ask clarifying questions:
+- What is the user experiencing? (errors, slowness, outages)
+- Which service/component is affected?
+- When did it start?
+- What changed recently?
+
+#### 2. Check Metrics First
+
+```bash
+# Port-forward Prometheus
+kubectl port-forward -n greenfield svc/prometheus 9090:9090
+
+# Query relevant SLOs:
+# - Error rate: http:requests:success_ratio_rate5m
+# - Latency: http:request:duration:p95_rate5m
+# - Resource usage: pod:cpu:saturation, pod:memory:saturation
+```
+
+#### 3. Correlate with Traces
+
+```bash
+# Port-forward Jaeger
+kubectl port-forward -n greenfield svc/jaeger-query 16686:16686
+
+# Search for:
+# - Service name
+# - Time range of incident
+# - Errors or slow traces
+# - Identify bottlenecks in distributed trace
+```
+
+#### 4. Analyze Logs with Trace Context
+
+```bash
+# Get logs for affected pod
+kubectl logs -n greenfield <pod-name> --tail=500
+
+# Look for:
+# - Error messages
+# - Exception stack traces
+# - Trace IDs from Jaeger
+# - Use trace_id to find related logs across services
+```
+
+#### 5. Provide Analysis
+
+Based on observability data, provide:
+- **Root cause**: What's causing the issue?
+- **Impact**: How many users affected? (check error rate)
+- **Urgency**: Is SLO violated? Error budget consumed?
+- **Recommended actions**: Rollback? Scale? Fix bug?
+
+#### 6. Generate Solutions
+
+Suggest concrete actions:
+- **Immediate mitigation**: Rollback, scale up, circuit breaker
+- **Code fixes**: Point to specific service/line based on traces
+- **Configuration changes**: Resource limits, timeouts, retries
+- **SLO adjustments**: If thresholds are too strict/loose
+
+### Scenario: High Latency Incident
+
+**User**: "My API is slow, P95 latency is 5 seconds"
+
+**Agent Response**:
+```
+I'll help you investigate the high latency. Let me analyze the observability data.
+
+**Step 1: Check Current Metrics**
+Query: http:request:duration:p95_rate5m
+Current P95: 5.2s (SLO: < 1s) ⚠️
+
+**Step 2: Identify Bottleneck**
+Looking at Jaeger traces for your service...
+Found: 80% of latency is in database query to PostgreSQL
+Specific query: SELECT * FROM users WHERE email = ?
+
+**Step 3: Check Logs**
+Found in logs (trace_id: abc123...):
+"Slow query warning: 4.8s for user lookup"
+
+**Root Cause**: 
+Missing database index on users.email column
+
+**Impact**:
+- P95 latency: 5.2s (4.2s over SLO)
+- Error budget: 23% remaining
+- Affecting ~1000 req/min
+
+**Recommended Actions**:
+1. **Immediate**: Add database index
+   ```sql
+   CREATE INDEX idx_users_email ON users(email);
+   ```
+
+2. **Short-term**: Add caching layer for user lookups
+
+3. **Long-term**: Review all database queries for missing indexes
+```
+
+### Scenario: High Error Rate
+
+**User**: "Getting 500 errors in production"
+
+**Agent Response**:
+```
+I'll investigate the error rate spike.
+
+**Step 1: Check SLO Violation**
+http:requests:success_ratio_rate5m: 85% (SLO: 99.9%) 🚨
+Error budget exhausted: -40%
+
+**Step 2: Identify Error Type**
+From metrics: HTTP 503 errors
+From logs: "Connection refused to backend-service"
+
+**Step 3: Check Service Health**
+kubectl get pods -n greenfield | grep backend-service
+backend-service-xxx: CrashLoopBackOff
+
+**Step 4: Root Cause Analysis**
+Logs show: "OutOfMemoryError: Java heap space"
+Pod memory usage: 95% before crash
+
+**Root Cause**: Memory leak in backend-service v2.3.0
+
+**Impact**:
+- 15% error rate
+- ~150 requests/min failing
+- Users seeing "Service Unavailable"
+
+**Recommended Actions**:
+1. **Immediate**: Rollback to v2.2.0
+   ```bash
+   kubectl set image deployment/backend-service \
+     backend-service=backend-service:v2.2.0 -n greenfield
+   ```
+
+2. **Short-term**: Increase memory limits temporarily
+   ```yaml
+   resources:
+     limits:
+       memory: 1Gi  # was 512Mi
+   ```
+
+3. **Long-term**: 
+   - Fix memory leak in v2.3.0
+   - Add heap dump on OOM
+   - Review memory profiling
+```
+
+### Creating Custom SLOs
+
+When users need custom SLOs, guide them through:
+
+1. **Identify what to measure**:
+   - What matters to users?
+   - What indicates good/bad service?
+
+2. **Choose SLO type**:
+   - **Availability**: Request success rate
+   - **Latency**: Response time percentiles
+   - **Throughput**: Requests per second
+   - **Quality**: Business-specific metrics
+
+3. **Set target**:
+   - 90%, 95%, 99%, 99.9%, 99.99%
+   - Calculate downtime budget
+
+4. **Implement**:
+   - Add Prometheus recording rule
+   - Add alert rule
+   - Create Grafana dashboard
+   - Document in runbook
+
+Example workflow in code:
+```yaml
+# 1. Recording rule
+- record: myapp:checkout:success_ratio_rate5m
+  expr: |
+    sum(rate(checkout_attempts{status="success"}[5m]))
+    /
+    sum(rate(checkout_attempts[5m]))
+
+# 2. Alert rule  
+- alert: CheckoutSLOViolation
+  expr: myapp:checkout:success_ratio_rate5m < 0.999
+  for: 5m
+  labels:
+    severity: critical
+    slo: checkout
+  annotations:
+    summary: "Checkout success rate below 99.9%"
+    description: "Current: {{ $value | humanizePercentage }}"
+```
+
+See `docs-mkdocs/docs/observability/custom-slos.md` for comprehensive guide.
+
+### Log Correlation Best Practices
+
+When analyzing incidents:
+
+1. **Start with metrics** (what's broken?)
+2. **Use traces** (where's the bottleneck?)
+3. **Dig into logs** (why did it break?)
+4. **Correlate with trace_id** (full context)
+
+Example:
+```
+Metric shows: Error rate spike at 10:30 AM
+Trace shows: Error in payment-service
+Trace ID: abc123def456...
+Log search: trace_id:"abc123def456"
+Log reveals: "Payment gateway timeout after 30s"
+Root cause: Downstream service degradation
+```
 
 ## Troubleshooting Hints
 
