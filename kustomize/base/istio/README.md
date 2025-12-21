@@ -2,6 +2,8 @@
 
 This directory contains the configuration for Istio service mesh with SSL/TLS ingress support.
 
+**📖 For complete ingress configuration with DNS setup, TLS certificates, and cloud provider guides, see the [Ingress URLs Configuration Guide](../../../docs-mkdocs/docs/networking/ingress-configuration.md).**
+
 ## Installation
 
 Istio should be installed separately using the Istio operator or Helm chart before applying the application manifests.
@@ -79,8 +81,11 @@ This creates:
 To use SSL/TLS with the gateways:
 
 1. **Install cert-manager** (see [cert-manager documentation](../cert-manager/README.md))
-2. **Create Certificate resources** (see `certificates-example.yaml` for examples)
-3. **Reference the certificate** in your Gateway configuration
+2. **Configure DNS** (see [DNS Configuration Guides](../../../docs-mkdocs/docs/networking/dns-aws.md))
+3. **Create Certificate resources** (see `certificates-example.yaml` for examples)
+4. **Reference the certificate** in your Gateway configuration
+
+For a complete walkthrough, see the [Ingress URLs Configuration Guide](../../../docs-mkdocs/docs/networking/ingress-configuration.md).
 
 Example certificate in istio-system namespace:
 
@@ -98,11 +103,16 @@ See `virtualservices-example.yaml` for example routing configurations:
 - Internal monitoring dashboard access
 - Path-based routing
 
+For more advanced examples including canary routing, CORS, and complete setups, see `ingress-complete-example.yaml`.
+
 To use the examples:
 
 ```bash
 # Update the example files with your actual domain names
 kubectl apply -f virtualservices-example.yaml
+
+# Or use the complete example with certificates and routing
+kubectl apply -f ingress-complete-example.yaml
 ```
 
 ## Mutual TLS (mTLS) Configuration
