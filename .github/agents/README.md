@@ -58,6 +58,48 @@ One-page cheat sheets for each domain area.
 4. **Use the common tasks** for quick copy-paste solutions
 5. **Refer to tooling reference** for command syntax
 
+## Recommended AI Models
+
+These instructions are designed to work with advanced AI models capable of understanding complex technical documentation and executing multi-step operations. Recommended model classes as of December 2025:
+
+### Optimal Performance (Recommended)
+- **Anthropic Claude 3.5 Sonnet (or latest in Claude 3.x family)** - Excellent for complex Kubernetes operations, infrastructure as code, and debugging
+- **OpenAI GPT-4 Turbo (or latest GPT-4 series)** - Strong general-purpose capabilities for cluster management tasks
+- **Google Gemini Pro 1.5+ (or latest Gemini Pro)** - Good for multi-cloud scenarios with large context windows
+
+### Good Performance
+- **Anthropic Claude 3 Opus** - Reliable for detailed troubleshooting and security tasks
+- **OpenAI GPT-4** - Solid choice for most cluster operations
+- **Google Gemini Pro** - Capable for standard deployment and management tasks
+
+### Model Selection Guidelines
+
+**For Complex Tasks** (multi-step deployments, architecture decisions, troubleshooting):
+- Use Claude 3.5 Sonnet or GPT-4 Turbo for best results
+- These models handle the detailed context in agent instructions effectively
+
+**For Standard Operations** (deployments, config changes, monitoring setup):
+- GPT-4 or Gemini Pro 1.5 work well
+- Faster response times with good accuracy
+
+**For Quick Reference Tasks** (command lookup, syntax help):
+- Any of the recommended models will suffice
+- Consider using models with faster response times
+
+### Context Window Considerations
+
+These agent instructions contain ~125KB of documentation. For best results:
+- **Minimum recommended**: 32K token context window
+- **Optimal**: 128K+ token context window (allows full context of multiple agents)
+- **Large operations**: Use Claude 3.5 Sonnet or Gemini Pro 1.5+ with their extended context capabilities
+
+### Note on Model Evolution
+
+AI models evolve rapidly. When using these instructions:
+- Always use the **latest version** in the recommended model class
+- Newer models in the same family (e.g., Claude 4.x, GPT-5.x) will generally perform better
+- Test with your specific use cases to determine the best model for your needs
+
 ## Cluster Context
 
 This Greenfield Cluster includes:
