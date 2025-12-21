@@ -182,6 +182,24 @@ grafana:
       cpu: 500m
       memory: 512Mi
 
+# Kiali configuration
+kiali:
+  enabled: true
+  replicas: 1
+  image:
+    repository: quay.io/kiali/kiali
+    tag: v1.79.0
+  auth:
+    strategy: anonymous  # ⚠️ Change to 'token' or 'openid' for production
+  passphrase: changeme123  # ⚠️ CHANGE THIS! Use strong passphrase in production
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
 # FastAPI example app configuration
 fastapi:
   enabled: true
