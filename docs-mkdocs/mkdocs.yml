@@ -103,6 +103,12 @@ nav:
       - Logging Integrations: observability/logging-integrations.md
     - Application:
       - FastAPI Example: components/fastapi.md
+  - Networking:
+    - Ingress Configuration: networking/ingress-configuration.md
+    - DNS Setup:
+      - AWS Route 53: networking/dns-aws.md
+      - Azure DNS: networking/dns-azure.md
+      - Google Cloud DNS: networking/dns-gcp.md
   - Security:
     - Overview: security/overview.md
     - Sealed Secrets: security/sealed-secrets.md

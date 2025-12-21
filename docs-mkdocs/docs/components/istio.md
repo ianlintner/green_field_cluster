@@ -10,6 +10,8 @@ The cluster includes Istio configuration with:
 - **Gateway resources**: Pre-configured for HTTP and HTTPS traffic
 - **Integration with cert-manager**: For automated certificate management
 
+**📖 For detailed ingress configuration with DNS setup and TLS certificates, see the [Ingress URLs Configuration Guide](../networking/ingress-configuration.md).**
+
 ## Architecture
 
 ```
@@ -511,6 +513,8 @@ See [kustomize/base/istio/README.md](../../kustomize/base/istio/README.md) for d
 
 ## Resources
 
+- [Ingress URLs Configuration Guide](../networking/ingress-configuration.md) - Complete guide for exposing services
+- [DNS Configuration Guides](../networking/dns-aws.md) - DNS setup for AWS, Azure, and GCP
 - [Official Istio Documentation](https://istio.io/latest/docs/)
 - [Istio Security Best Practices](https://istio.io/latest/docs/ops/best-practices/security/)
 - [Istio Traffic Management](https://istio.io/latest/docs/tasks/traffic-management/)

@@ -10,6 +10,8 @@ The greenfield cluster includes cert-manager configuration for:
 - **Support for HTTP-01 challenges** via Istio ingress
 - **Both staging and production** Let's Encrypt environments
 
+**📖 For complete ingress configuration with cert-manager, see the [Ingress URLs Configuration Guide](../networking/ingress-configuration.md).**
+
 ## Architecture
 
 ```
@@ -388,6 +390,8 @@ spec:
 
 ## Resources
 
+- [Ingress URLs Configuration Guide](../networking/ingress-configuration.md) - Complete guide with cert-manager examples
+- [DNS Configuration Guides](../networking/dns-aws.md) - DNS setup for AWS, Azure, and GCP
 - [cert-manager Documentation](https://cert-manager.io/docs/)
 - [Let's Encrypt Documentation](https://letsencrypt.org/docs/)
 - [Istio TLS Documentation](https://istio.io/latest/docs/tasks/traffic-management/ingress/secure-ingress/)
