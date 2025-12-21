@@ -1,0 +1,354 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-slo-dashboards
+  namespace: greenfield
+  labels:
+    app: grafana
+    component: dashboards
+data:
+  cluster-health-slo.json: |
+    {
+      "dashboard": {
+        "title": "Cluster Health SLOs",
+        "tags": ["slo", "cluster", "health"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "API Server Availability",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "apiserver:availability:ratio_rate5m * 100",
+                "legendFormat": "Availability %"
+              },
+              {
+                "expr": "99.9",
+                "legendFormat": "SLO Target (99.9%)"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percent",
+                "min": 99,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Node Health Ratio",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "node:health:ratio * 100",
+                "legendFormat": "Nodes Ready %"
+              },
+              {
+                "expr": "99",
+                "legendFormat": "SLO Target (99%)"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percent",
+                "min": 95,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Cluster CPU Utilization",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "cluster:cpu:utilization * 100",
+                "legendFormat": "CPU Usage %"
+              },
+              {
+                "expr": "90",
+                "legendFormat": "Warning Threshold (90%)"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percent",
+                "min": 0,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Cluster Memory Utilization",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "cluster:memory:utilization * 100",
+                "legendFormat": "Memory Usage %"
+              },
+              {
+                "expr": "85",
+                "legendFormat": "Warning Threshold (85%)"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percent",
+                "min": 0,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Pod Scheduling Success Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "pod:scheduling:success_ratio_rate5m * 100"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "steps": [
+                    {"value": 0, "color": "red"},
+                    {"value": 99, "color": "yellow"},
+                    {"value": 99.9, "color": "green"}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16}
+          },
+          {
+            "id": 6,
+            "title": "Cluster Disk Utilization",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "cluster:disk:utilization * 100"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "steps": [
+                    {"value": 0, "color": "green"},
+                    {"value": 80, "color": "yellow"},
+                    {"value": 90, "color": "red"}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16}
+          }
+        ],
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        }
+      }
+    }
+  
+  application-slo.json: |
+    {
+      "dashboard": {
+        "title": "Application SLOs",
+        "tags": ["slo", "application", "performance"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Application Success Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "http:requests:success_ratio_rate5m * 100",
+                "legendFormat": "{{ app }} - {{ namespace }}"
+              },
+              {
+                "expr": "99.9",
+                "legendFormat": "SLO Target (99.9%)"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percent",
+                "min": 95,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Error Budget Remaining",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "http:requests:error_budget_remaining * 100",
+                "legendFormat": "{{ app }} - {{ namespace }}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percent",
+                "min": 0,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Request Latency (P95)",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "http:request:duration:p95_rate5m",
+                "legendFormat": "{{ app }} - {{ namespace }}"
+              },
+              {
+                "expr": "1",
+                "legendFormat": "Warning Threshold (1s)"
+              },
+              {
+                "expr": "5",
+                "legendFormat": "Critical Threshold (5s)"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "s",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Request Latency (P99)",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "http:request:duration:p99_rate5m",
+                "legendFormat": "{{ app }} - {{ namespace }}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "s",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "http:requests:rate5m",
+                "legendFormat": "{{ app }} - {{ namespace }}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "reqps",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 6,
+            "title": "Pod CPU Saturation",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "pod:cpu:saturation * 100",
+                "legendFormat": "{{ pod }}"
+              },
+              {
+                "expr": "90",
+                "legendFormat": "Warning (90%)"
+              },
+              {
+                "expr": "95",
+                "legendFormat": "Critical (95%)"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percent",
+                "min": 0,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          },
+          {
+            "id": 7,
+            "title": "Pod Memory Saturation",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "pod:memory:saturation * 100",
+                "legendFormat": "{{ pod }}"
+              },
+              {
+                "expr": "85",
+                "legendFormat": "Warning (85%)"
+              },
+              {
+                "expr": "95",
+                "legendFormat": "Critical (95%)"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "percent",
+                "min": 0,
+                "max": 100
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+          },
+          {
+            "id": 8,
+            "title": "Pod Restart Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "pod:restarts:rate1h",
+                "legendFormat": "{{ pod }}"
+              }
+            ],
+            "yaxes": [
+              {
+                "format": "short",
+                "min": 0
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+          }
+        ],
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        }
+      }
+    }

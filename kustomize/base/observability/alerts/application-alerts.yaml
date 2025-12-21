@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-application-alerts
+  namespace: greenfield
+  labels:
+    app: prometheus
+    component: alerts
+data:
+  application-alerts.yml: |
+    groups:
+      - name: application_slo_alerts
+        interval: 1m
+        rules:
+          # Critical: Application Error Budget Exhausted
+          - alert: ApplicationErrorBudgetExhausted
+            expr: |
+              http:requests:error_budget_remaining < 0.1
+              and
+              http:requests:rate5m > 0.1
+            for: 5m
+            labels:
+              severity: critical
+              component: application
+              slo: error_budget
+            annotations:
+              summary: "Application {{ $labels.app }} error budget nearly exhausted"
+              description: "Application {{ $labels.app }} in namespace {{ $labels.namespace }} has only {{ $value | humanizePercentage }} error budget remaining (below 10%)."
+              runbook_url: "https://github.com/ianlintner/green_field_cluster/docs/runbooks/error-budget.md"
+          
+          # Warning: High Error Rate
+          - alert: HighApplicationErrorRate
+            expr: |
+              (1 - http:requests:success_ratio_rate5m) > 0.05
+              and
+              http:requests:rate5m > 0.1
+            for: 5m
+            labels:
+              severity: warning
+              component: application
+              slo: errors
+            annotations:
+              summary: "High error rate for {{ $labels.app }}"
+              description: "Application {{ $labels.app }} has {{ $value | humanizePercentage }} error rate (above 5% threshold)."
+          
+          # Critical: Very High Error Rate
+          - alert: VeryHighApplicationErrorRate
+            expr: |
+              (1 - http:requests:success_ratio_rate5m) > 0.10
+              and
+              http:requests:rate5m > 0.1
+            for: 3m
+            labels:
+              severity: critical
+              component: application
+              slo: errors
+            annotations:
+              summary: "Very high error rate for {{ $labels.app }}"
+              description: "Application {{ $labels.app }} has {{ $value | humanizePercentage }} error rate (above 10% threshold). Immediate attention required."
+          
+          # Warning: High Latency P95
+          - alert: HighApplicationLatencyP95
+            expr: |
+              http:request:duration:p95_rate5m > 1
+              and
+              http:requests:rate5m > 0.1
+            for: 10m
+            labels:
+              severity: warning
+              component: application
+              slo: latency
+            annotations:
+              summary: "High P95 latency for {{ $labels.app }}"
+              description: "Application {{ $labels.app }} P95 latency is {{ $value }}s (above 1s threshold)."
+          
+          # Critical: Very High Latency P95
+          - alert: VeryHighApplicationLatencyP95
+            expr: |
+              http:request:duration:p95_rate5m > 5
+              and
+              http:requests:rate5m > 0.1
+            for: 5m
+            labels:
+              severity: critical
+              component: application
+              slo: latency
+            annotations:
+              summary: "Very high P95 latency for {{ $labels.app }}"
+              description: "Application {{ $labels.app }} P95 latency is {{ $value }}s (above 5s threshold). Service degradation likely."
+          
+          # Warning: Low Traffic Detection (for non-production environments)
+          # This alert fires when traffic is very low, allowing other alerts to be silenced
+          - alert: LowTrafficEnvironment
+            expr: |
+              http:requests:rate5m < 0.01
+            for: 30m
+            labels:
+              severity: info
+              component: application
+              traffic: low
+            annotations:
+              summary: "Low traffic detected for {{ $labels.app }}"
+              description: "Application {{ $labels.app }} has very low traffic ({{ $value }} req/s). This is typical for dev/staging environments."
+          
+          # Warning: High Pod CPU Saturation
+          - alert: HighPodCPUSaturation
+            expr: |
+              pod:cpu:saturation > 0.90
+            for: 15m
+            labels:
+              severity: warning
+              component: application
+              resource: cpu
+            annotations:
+              summary: "Pod {{ $labels.pod }} CPU saturation high"
+              description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is at {{ $value | humanizePercentage }} CPU saturation (above 90%)."
+          
+          # Critical: Very High Pod CPU Saturation
+          - alert: VeryHighPodCPUSaturation
+            expr: |
+              pod:cpu:saturation > 0.95
+            for: 10m
+            labels:
+              severity: critical
+              component: application
+              resource: cpu
+            annotations:
+              summary: "Pod {{ $labels.pod }} CPU saturation critical"
+              description: "Pod {{ $labels.pod }} is at {{ $value | humanizePercentage }} CPU saturation. Pod may be throttled."
+          
+          # Warning: High Pod Memory Saturation
+          - alert: HighPodMemorySaturation
+            expr: |
+              pod:memory:saturation > 0.85
+            for: 10m
+            labels:
+              severity: warning
+              component: application
+              resource: memory
+            annotations:
+              summary: "Pod {{ $labels.pod }} memory saturation high"
+              description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is at {{ $value | humanizePercentage }} memory saturation (above 85%)."
+          
+          # Critical: Very High Pod Memory Saturation
+          - alert: VeryHighPodMemorySaturation
+            expr: |
+              pod:memory:saturation > 0.95
+            for: 5m
+            labels:
+              severity: critical
+              component: application
+              resource: memory
+            annotations:
+              summary: "Pod {{ $labels.pod }} memory saturation critical"
+              description: "Pod {{ $labels.pod }} is at {{ $value | humanizePercentage }} memory saturation. OOM kill risk."
+          
+          # Warning: High Pod Restart Rate
+          - alert: HighPodRestartRate
+            expr: |
+              pod:restarts:rate1h > 0
+            for: 5m
+            labels:
+              severity: warning
+              component: application
+            annotations:
+              summary: "Pod {{ $labels.pod }} restarting frequently"
+              description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is restarting at rate {{ $value }} per hour."
+          
+          # Critical: Application Down
+          - alert: ApplicationDown
+            expr: |
+              up{job=~".*-app"} == 0
+            for: 2m
+            labels:
+              severity: critical
+              component: application
+            annotations:
+              summary: "Application {{ $labels.job }} is down"
+              description: "Application {{ $labels.job }} has been down for more than 2 minutes."

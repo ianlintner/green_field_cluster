@@ -96,6 +96,8 @@ nav:
       - Prometheus: components/prometheus.md
       - Grafana: components/grafana.md
       - Kiali: components/kiali.md
+      - SLOs: observability/slos.md
+      - Alerts: observability/alerts.md
     - Application:
       - FastAPI Example: components/fastapi.md
   - Security:

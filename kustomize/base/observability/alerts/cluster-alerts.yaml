@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-cluster-alerts
+  namespace: greenfield
+  labels:
+    app: prometheus
+    component: alerts
+data:
+  cluster-alerts.yml: |
+    groups:
+      - name: cluster_health_alerts
+        interval: 1m
+        rules:
+          # Critical: API Server Availability Below SLO
+          - alert: APIServerAvailabilityBelowSLO
+            expr: |
+              apiserver:availability:ratio_rate5m < 0.999
+              and
+              on() (sum(rate(apiserver_request_total[5m])) > 0.1)
+            for: 5m
+            labels:
+              severity: critical
+              component: apiserver
+              slo: availability
+            annotations:
+              summary: "API Server availability is below 99.9% SLO"
+              description: "API Server availability is {{ $value | humanizePercentage }} (below 99.9% SLO) for the last 5 minutes. This impacts cluster operations."
+              runbook_url: "https://github.com/ianlintner/green_field_cluster/docs/runbooks/apiserver-availability.md"
+          
+          # Critical: Node Not Ready
+          - alert: NodeNotReady
+            expr: |
+              kube_node_status_condition{condition="Ready",status="true"} == 0
+            for: 5m
+            labels:
+              severity: critical
+              component: node
+            annotations:
+              summary: "Node {{ $labels.node }} is not ready"
+              description: "Node {{ $labels.node }} has been in NotReady state for more than 5 minutes."
+          
+          # Warning: Low Node Health Ratio
+          - alert: LowNodeHealthRatio
+            expr: |
+              node:health:ratio < 0.99
+            for: 10m
+            labels:
+              severity: warning
+              component: cluster
+              slo: node_health
+            annotations:
+              summary: "Node health ratio below 99%"
+              description: "Only {{ $value | humanizePercentage }} of nodes are ready (below 99% SLO)."
+          
+          # Warning: High Pod Scheduling Failure Rate
+          - alert: HighPodSchedulingFailureRate
+            expr: |
+              pod:scheduling:success_ratio_rate5m < 0.99
+              and
+              on() (sum(rate(kube_pod_status_scheduled[5m])) > 0.01)
+            for: 10m
+            labels:
+              severity: warning
+              component: scheduler
+              slo: scheduling
+            annotations:
+              summary: "Pod scheduling success rate below 99%"
+              description: "Pod scheduling success rate is {{ $value | humanizePercentage }} (below 99% SLO)."
+          
+          # Critical: High Cluster CPU Utilization
+          - alert: HighClusterCPUUtilization
+            expr: |
+              cluster:cpu:utilization > 0.90
+            for: 15m
+            labels:
+              severity: critical
+              component: cluster
+              resource: cpu
+            annotations:
+              summary: "Cluster CPU utilization above 90%"
+              description: "Cluster CPU utilization is {{ $value | humanizePercentage }} (above 90% threshold) for 15 minutes."
+          
+          # Warning: High Cluster Memory Utilization
+          - alert: HighClusterMemoryUtilization
+            expr: |
+              cluster:memory:utilization > 0.85
+            for: 15m
+            labels:
+              severity: warning
+              component: cluster
+              resource: memory
+            annotations:
+              summary: "Cluster memory utilization above 85%"
+              description: "Cluster memory utilization is {{ $value | humanizePercentage }} (above 85% threshold) for 15 minutes."
+          
+          # Warning: High Disk Utilization
+          - alert: HighDiskUtilization
+            expr: |
+              cluster:disk:utilization > 0.80
+            for: 10m
+            labels:
+              severity: warning
+              component: storage
+              resource: disk
+            annotations:
+              summary: "Cluster disk utilization above 80%"
+              description: "Cluster disk utilization is {{ $value | humanizePercentage }}. Consider increasing storage capacity."
+          
+          # Critical: PVC Almost Full
+          - alert: PVCAlmostFull
+            expr: |
+              persistentvolumeclaim:usage:ratio > 0.90
+            for: 5m
+            labels:
+              severity: critical
+              component: storage
+            annotations:
+              summary: "PVC {{ $labels.persistentvolumeclaim }} is almost full"
+              description: "PVC {{ $labels.persistentvolumeclaim }} in namespace {{ $labels.namespace }} is {{ $value | humanizePercentage }} full."
+          
+          # Warning: PVC High Usage
+          - alert: PVCHighUsage
+            expr: |
+              persistentvolumeclaim:usage:ratio > 0.80
+            for: 10m
+            labels:
+              severity: warning
+              component: storage
+            annotations:
+              summary: "PVC {{ $labels.persistentvolumeclaim }} usage is high"
+              description: "PVC {{ $labels.persistentvolumeclaim }} in namespace {{ $labels.namespace }} is {{ $value | humanizePercentage }} full."

@@ -31,6 +31,18 @@ spec:
               mountPath: /etc/prometheus
             - name: prometheus-storage
               mountPath: /prometheus
+            - name: cluster-slo-rules
+              mountPath: /etc/prometheus/rules/cluster-slos.yml
+              subPath: cluster-slos.yml
+            - name: application-slo-rules
+              mountPath: /etc/prometheus/rules/application-slos.yml
+              subPath: application-slos.yml
+            - name: cluster-alerts
+              mountPath: /etc/prometheus/rules/cluster-alerts.yml
+              subPath: cluster-alerts.yml
+            - name: application-alerts
+              mountPath: /etc/prometheus/rules/application-alerts.yml
+              subPath: application-alerts.yml
           resources:
             requests:
               cpu: 200m
@@ -56,3 +68,15 @@ spec:
             name: prometheus-config
         - name: prometheus-storage
           emptyDir: {}
+        - name: cluster-slo-rules
+          configMap:
+            name: prometheus-cluster-slo-rules
+        - name: application-slo-rules
+          configMap:
+            name: prometheus-application-slo-rules
+        - name: cluster-alerts
+          configMap:
+            name: prometheus-cluster-alerts
+        - name: application-alerts
+          configMap:
+            name: prometheus-application-alerts

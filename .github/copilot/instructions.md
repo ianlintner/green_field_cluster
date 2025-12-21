@@ -40,6 +40,9 @@ The cluster includes these pre-configured components:
 - **Jaeger**: Distributed tracing with UI
 - **Prometheus**: Metrics collection with service discovery
 - **Grafana**: Dashboards with pre-configured data sources
+- **SLO Framework**: Cluster and application SLO metrics with recording rules
+- **Alerting**: Environment-aware alerts based on SLO violations
+- **AlertManager**: Optional intelligent alert routing and grouping
 
 ### Example Application
 - **FastAPI**: Fully instrumented example with OTel, Prometheus metrics, and database connectivity
@@ -88,6 +91,24 @@ Help them:
 3. Update resource limits
 4. Configure persistent storage sizes
 5. Review security settings
+
+### Scenario 5: Setting Up SLOs and Alerting
+
+When a user says: *"I want to set up monitoring SLOs and alerts for my production cluster"*
+
+Help them:
+1. Review the default SLOs in `kustomize/base/observability/`
+2. Enable AlertManager by uncommenting it in `kustomize/base/observability/kustomization.yaml`
+3. Configure notification channels in `alertmanager/configmap.yaml` (Slack, PagerDuty, email)
+4. Adjust alert thresholds for their environment in the alert ConfigMaps
+5. Set up environment-specific routing in overlay patches
+6. Point them to the comprehensive documentation at `docs-mkdocs/docs/observability/`
+
+Key points:
+- SLOs are pre-configured for cluster health (API server, nodes, resources) and application performance (error rate, latency, saturation)
+- Alerting is environment-aware: strict for production, relaxed for dev/staging
+- Low-traffic environments automatically suppress false positives
+- Grafana dashboards are included for SLO visualization
 
 ## Code Generation Guidelines
 
