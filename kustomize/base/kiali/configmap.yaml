@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kiali
+  namespace: greenfield
+  labels:
+    app: kiali
+data:
+  config.yaml: |
+    auth:
+      strategy: anonymous
+    deployment:
+      accessible_namespaces:
+      - '**'
+    external_services:
+      custom_dashboards:
+        enabled: true
+      istio:
+        root_namespace: istio-system
+        config_map_name: istio
+        istio_sidecar_annotation: sidecar.istio.io/status
+        url_service_version: http://istiod.istio-system:15014/version
+      prometheus:
+        url: http://prometheus.greenfield.svc.cluster.local:9090
+      grafana:
+        enabled: true
+        in_cluster_url: http://grafana.greenfield.svc.cluster.local:3000
+        url: http://grafana.greenfield.svc.cluster.local:3000
+      tracing:
+        enabled: true
+        in_cluster_url: http://jaeger-query.greenfield.svc.cluster.local:16686
+        url: http://jaeger-query.greenfield.svc.cluster.local:16686
+        use_grpc: true
+        grpc_port: 9095
+    server:
+      port: 20001
+      web_root: /kiali

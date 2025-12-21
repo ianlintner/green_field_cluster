@@ -28,6 +28,8 @@ replicas:
     count: 1
   - name: grafana
     count: 1
+  - name: kiali
+    count: 1
   - name: fastapi-app
     count: 1
 

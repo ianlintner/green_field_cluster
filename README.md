@@ -63,6 +63,7 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 - ✅ **Jaeger** - Distributed tracing
 - ✅ **Prometheus** - Metrics collection
 - ✅ **Grafana** - Dashboards and visualization
+- ✅ **Kiali** - Service mesh observability for Istio
 
 ### Security & SSL/TLS
 - ✅ **cert-manager** - Automated SSL/TLS certificate management
@@ -91,6 +92,7 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 - ✅ **Jaeger** - Distributed tracing
 - ✅ **Prometheus** - Metrics collection
 - ✅ **Grafana** - Dashboards and visualization
+- ✅ **Kiali** - Service mesh observability for Istio
 
 ### Example Application
 - ✅ **FastAPI App** - Fully instrumented with OTel and Prometheus metrics
@@ -246,6 +248,7 @@ See the [Infrastructure README](infrastructure/README.md) for quick cluster setu
 - **Grafana**: `kubectl port-forward -n greenfield svc/grafana 3000:3000`
 - **Prometheus**: `kubectl port-forward -n greenfield svc/prometheus 9090:9090`
 - **Jaeger**: `kubectl port-forward -n greenfield svc/jaeger-query 16686:16686`
+- **Kiali**: `kubectl port-forward -n greenfield svc/kiali 20001:20001` (Access at http://localhost:20001/kiali)
 
 ## 🤝 Contributing
 
