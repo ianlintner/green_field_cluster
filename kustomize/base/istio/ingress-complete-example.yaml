@@ -1,0 +1,376 @@
+# Complete Ingress Example Configuration
+# This file demonstrates a complete setup for exposing services with TLS certificates
+# 
+# Usage:
+# 1. Replace "greenfieldcluster.example" with your actual domain
+# 2. Update service names and ports to match your services
+# 3. Choose between wildcard or individual certificates
+# 4. Apply with: kubectl apply -f ingress-complete-example.yaml
+
+---
+# Example 1: Individual Certificates for Each Service
+# Simpler setup using HTTP-01 challenge (no DNS API required)
+
+# Certificate for main app
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: app-cert
+  namespace: istio-system
+spec:
+  secretName: app-tls
+  duration: 2160h # 90 days
+  renewBefore: 360h # Renew 15 days before expiration
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - app.greenfieldcluster.example
+---
+# Certificate for API
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: api-cert
+  namespace: istio-system
+spec:
+  secretName: api-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - api.greenfieldcluster.example
+---
+# Certificate for Grafana monitoring
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: grafana-cert
+  namespace: istio-system
+spec:
+  secretName: grafana-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - grafana.greenfieldcluster.example
+---
+# Gateway with multiple TLS configurations
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: services-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+    gateway-type: external
+  servers:
+  # HTTP server for ACME challenges and redirect
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*.greenfieldcluster.example"
+    tls:
+      httpsRedirect: true  # Automatically redirect HTTP to HTTPS
+  # HTTPS for app service
+  - port:
+      number: 443
+      name: https-app
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: app-tls
+    hosts:
+    - "app.greenfieldcluster.example"
+  # HTTPS for api service
+  - port:
+      number: 443
+      name: https-api
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: api-tls
+    hosts:
+    - "api.greenfieldcluster.example"
+  # HTTPS for monitoring
+  - port:
+      number: 443
+      name: https-grafana
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: grafana-tls
+    hosts:
+    - "grafana.greenfieldcluster.example"
+---
+# VirtualService for main app
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: app
+  namespace: greenfield
+spec:
+  hosts:
+  - "app.greenfieldcluster.example"
+  gateways:
+  - istio-system/services-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: fastapi-app.greenfield.svc.cluster.local
+        port:
+          number: 8000
+---
+# VirtualService for API
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api
+  namespace: greenfield
+spec:
+  hosts:
+  - "api.greenfieldcluster.example"
+  gateways:
+  - istio-system/services-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: fastapi-app.greenfield.svc.cluster.local
+        port:
+          number: 8000
+---
+# VirtualService for Grafana
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: grafana
+  namespace: greenfield
+spec:
+  hosts:
+  - "grafana.greenfieldcluster.example"
+  gateways:
+  - istio-system/services-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: grafana.greenfield.svc.cluster.local
+        port:
+          number: 3000
+
+---
+# Example 2: Wildcard Certificate
+# Requires DNS-01 challenge with DNS provider integration
+# Uncomment and configure DNS provider settings
+
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: wildcard-cert
+#   namespace: istio-system
+# spec:
+#   secretName: wildcard-tls
+#   duration: 2160h
+#   renewBefore: 360h
+#   issuerRef:
+#     name: letsencrypt-prod
+#     kind: ClusterIssuer
+#   dnsNames:
+#   - "*.greenfieldcluster.example"
+#   - "greenfieldcluster.example"
+---
+# Gateway with wildcard certificate
+# apiVersion: networking.istio.io/v1beta1
+# kind: Gateway
+# metadata:
+#   name: wildcard-gateway
+#   namespace: istio-system
+# spec:
+#   selector:
+#     istio: ingressgateway
+#     gateway-type: external
+#   servers:
+#   - port:
+#       number: 80
+#       name: http
+#       protocol: HTTP
+#     hosts:
+#     - "*.greenfieldcluster.example"
+#     - "greenfieldcluster.example"
+#     tls:
+#       httpsRedirect: true
+#   - port:
+#       number: 443
+#       name: https
+#       protocol: HTTPS
+#     tls:
+#       mode: SIMPLE
+#       credentialName: wildcard-tls
+#     hosts:
+#     - "*.greenfieldcluster.example"
+#     - "greenfieldcluster.example"
+
+---
+# Example 3: Path-Based Routing
+# Route different paths to different services on the same domain
+
+# apiVersion: networking.istio.io/v1beta1
+# kind: VirtualService
+# metadata:
+#   name: multi-path
+#   namespace: greenfield
+# spec:
+#   hosts:
+#   - "app.greenfieldcluster.example"
+#   gateways:
+#   - istio-system/services-gateway
+#   http:
+#   # Route /api/* to API service
+#   - match:
+#     - uri:
+#         prefix: /api/
+#     rewrite:
+#       uri: /
+#     route:
+#     - destination:
+#         host: api-service.greenfield.svc.cluster.local
+#         port:
+#           number: 8000
+#   # Route /admin/* to admin service
+#   - match:
+#     - uri:
+#         prefix: /admin/
+#     route:
+#     - destination:
+#         host: admin-service.greenfield.svc.cluster.local
+#         port:
+#           number: 8080
+#   # Default route to frontend
+#   - route:
+#     - destination:
+#         host: frontend-service.greenfield.svc.cluster.local
+#         port:
+#           number: 80
+
+---
+# Example 4: Advanced Routing with Headers
+# Route based on headers for canary deployments or A/B testing
+
+# apiVersion: networking.istio.io/v1beta1
+# kind: VirtualService
+# metadata:
+#   name: canary-routing
+#   namespace: greenfield
+# spec:
+#   hosts:
+#   - "app.greenfieldcluster.example"
+#   gateways:
+#   - istio-system/services-gateway
+#   http:
+#   # Canary traffic (header-based)
+#   - match:
+#     - headers:
+#         x-canary:
+#           exact: "true"
+#     route:
+#     - destination:
+#         host: app-canary.greenfield.svc.cluster.local
+#         port:
+#           number: 8000
+#   # Beta users (header-based)
+#   - match:
+#     - headers:
+#         x-version:
+#           exact: "beta"
+#     route:
+#     - destination:
+#         host: app-beta.greenfield.svc.cluster.local
+#         port:
+#           number: 8000
+#   # Production traffic with weighted routing (90/10 split)
+#   - route:
+#     - destination:
+#         host: app-stable.greenfield.svc.cluster.local
+#         port:
+#           number: 8000
+#       weight: 90
+#     - destination:
+#         host: app-canary.greenfield.svc.cluster.local
+#         port:
+#           number: 8000
+#       weight: 10
+
+---
+# Example 5: Timeout and Retry Configuration
+
+# apiVersion: networking.istio.io/v1beta1
+# kind: VirtualService
+# metadata:
+#   name: app-with-resilience
+#   namespace: greenfield
+# spec:
+#   hosts:
+#   - "app.greenfieldcluster.example"
+#   gateways:
+#   - istio-system/services-gateway
+#   http:
+#   - route:
+#     - destination:
+#         host: app-service.greenfield.svc.cluster.local
+#         port:
+#           number: 8000
+#     timeout: 30s
+#     retries:
+#       attempts: 3
+#       perTryTimeout: 10s
+#       retryOn: 5xx,reset,connect-failure,refused-stream
+
+---
+# Example 6: CORS Configuration
+
+# apiVersion: networking.istio.io/v1beta1
+# kind: VirtualService
+# metadata:
+#   name: api-with-cors
+#   namespace: greenfield
+# spec:
+#   hosts:
+#   - "api.greenfieldcluster.example"
+#   gateways:
+#   - istio-system/services-gateway
+#   http:
+#   - corsPolicy:
+#       allowOrigins:
+#       - exact: "https://app.greenfieldcluster.example"
+#       - regex: "https://.*\\.greenfieldcluster\\.example"
+#       allowMethods:
+#       - GET
+#       - POST
+#       - PUT
+#       - DELETE
+#       allowHeaders:
+#       - Authorization
+#       - Content-Type
+#       - X-Requested-With
+#       maxAge: "24h"
+#       allowCredentials: true
+#     route:
+#     - destination:
+#         host: api-service.greenfield.svc.cluster.local
+#         port:
+#           number: 8000
