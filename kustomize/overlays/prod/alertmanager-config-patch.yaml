@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: greenfield-prod
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+    
+    # Production environment - strict alerting
+    route:
+      group_by: ['alertname', 'cluster', 'service', 'namespace']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 4h
+      receiver: 'prod-default'
+      
+      routes:
+        # Critical production alerts - immediate notification
+        - match:
+            severity: critical
+          receiver: 'prod-critical'
+          group_wait: 10s
+          repeat_interval: 1h
+        
+        # Warning production alerts
+        - match:
+            severity: warning
+          receiver: 'prod-warning'
+          group_wait: 30s
+          repeat_interval: 2h
+    
+    # Inhibit rules to prevent alert storms
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'namespace', 'pod', 'container']
+      
+      - source_match:
+          alertname: 'ApplicationDown'
+        target_match_re:
+          alertname: '(HighApplicationErrorRate|HighApplicationLatencyP95|ApplicationErrorBudgetExhausted)'
+        equal: ['job', 'namespace']
+    
+    receivers:
+      - name: 'prod-default'
+        # Configure your default notification channel
+        # slack_configs:
+        #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        #     channel: '#alerts-prod'
+      
+      - name: 'prod-critical'
+        # Configure immediate notifications for critical issues
+        # Multiple channels for redundancy
+        # slack_configs:
+        #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        #     channel: '#alerts-critical'
+        #     title: '[CRITICAL] {{ .GroupLabels.alertname }}'
+        #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        # 
+        # pagerduty_configs:
+        #   - service_key: 'YOUR_PAGERDUTY_KEY'
+        #     description: '{{ .GroupLabels.alertname }}'
+      
+      - name: 'prod-warning'
+        # slack_configs:
+        #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        #     channel: '#alerts-warning'
+        #     title: '[WARNING] {{ .GroupLabels.alertname }}'

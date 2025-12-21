@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: greenfield-dev
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+    
+    # Development environment - minimal alerting
+    route:
+      group_by: ['alertname']
+      group_wait: 30m
+      group_interval: 30m
+      repeat_interval: 24h
+      receiver: 'dev-low-priority'
+      
+      routes:
+        # Only alert on critical issues in dev
+        - match:
+            severity: critical
+          receiver: 'dev-critical'
+          group_wait: 15m
+          repeat_interval: 12h
+        
+        # All other alerts go to low priority
+        - match:
+            severity: warning
+          receiver: 'dev-low-priority'
+          group_wait: 1h
+          repeat_interval: 48h
+    
+    # Silence most alerts in low-traffic dev environments
+    inhibit_rules:
+      - source_match:
+          traffic: low
+        target_match_re:
+          alertname: '.*'
+        equal: []
+    
+    receivers:
+      - name: 'dev-critical'
+        # Configure minimal notifications for dev critical alerts
+        # webhook_configs:
+        #   - url: 'http://localhost:5001/dev-critical'
+      
+      - name: 'dev-low-priority'
+        # Log only, no notifications

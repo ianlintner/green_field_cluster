@@ -61,9 +61,12 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 ### Observability Stack
 - ✅ **OpenTelemetry Collector** - Centralized telemetry
 - ✅ **Jaeger** - Distributed tracing
-- ✅ **Prometheus** - Metrics collection
-- ✅ **Grafana** - Dashboards and visualization
+- ✅ **Prometheus** - Metrics collection with SLO recording rules
+- ✅ **Grafana** - Dashboards and visualization with SLO dashboards
 - ✅ **Kiali** - Service mesh observability for Istio
+- ✅ **SLO Framework** - Cluster and application SLO metrics
+- ✅ **Alerting** - Environment-aware alerts based on SLO violations
+- ✅ **AlertManager** - Optional intelligent alert routing
 
 ### Security & SSL/TLS
 - ✅ **cert-manager** - Automated SSL/TLS certificate management
@@ -83,16 +86,6 @@ helm install greenfield helm/greenfield-cluster --namespace greenfield --create-
 - ✅ **Security Scanning** - Trivy vulnerability checks
 - ✅ **Auto-deployed Docs** - MkDocs on GitHub Pages
 - ✅ **Copilot Integration** - AI-assisted customization
-
-### Example Application
-- ✅ **FastAPI App** - Fully instrumented with OTel and Prometheus metrics
-
-### Observability Stack
-- ✅ **OpenTelemetry Collector** - Centralized telemetry
-- ✅ **Jaeger** - Distributed tracing
-- ✅ **Prometheus** - Metrics collection
-- ✅ **Grafana** - Dashboards and visualization
-- ✅ **Kiali** - Service mesh observability for Istio
 
 ### Example Application
 - ✅ **FastAPI App** - Fully instrumented with OTel and Prometheus metrics
@@ -249,6 +242,41 @@ See the [Infrastructure README](infrastructure/README.md) for quick cluster setu
 - **Prometheus**: `kubectl port-forward -n greenfield svc/prometheus 9090:9090`
 - **Jaeger**: `kubectl port-forward -n greenfield svc/jaeger-query 16686:16686`
 - **Kiali**: `kubectl port-forward -n greenfield svc/kiali 20001:20001` (Access at http://localhost:20001/kiali)
+
+## 🎯 SLOs and Alerting
+
+The cluster includes a comprehensive SLO (Service Level Objective) framework with environment-aware alerting:
+
+### Features
+
+- **Cluster SLOs**: API server availability (99.9%), node health (99%), resource utilization
+- **Application SLOs**: Request success rate (99.9%), latency (P95/P99), error budgets
+- **Environment-Aware Alerts**: Strict thresholds for production, relaxed for dev/staging
+- **Low-Traffic Handling**: Automatic suppression in low-traffic environments
+- **Grafana Dashboards**: Pre-built SLO visualization dashboards
+- **Optional AlertManager**: Intelligent alert routing to Slack, PagerDuty, email, etc.
+
+### Quick Start
+
+1. **View SLO Dashboards** in Grafana (port-forward and visit http://localhost:3000)
+   - Cluster Health SLOs
+   - Application SLOs
+
+2. **Enable AlertManager** (optional):
+   ```bash
+   # Edit kustomize/base/observability/kustomization.yaml
+   # Uncomment the alertmanager resource
+   
+   # Configure notification channels in alertmanager/configmap.yaml
+   # Then apply
+   kubectl apply -k kustomize/base/
+   ```
+
+3. **Customize Thresholds**: Edit files in `kustomize/base/observability/`
+   - `slos/` - Recording rules for SLO metrics
+   - `alerts/` - Alert rules and thresholds
+
+For detailed documentation, see [SLOs Guide](https://ianlintner.github.io/green_field_cluster/observability/slos/) and [Alerting Guide](https://ianlintner.github.io/green_field_cluster/observability/alerts/).
 
 ## 🤝 Contributing
 

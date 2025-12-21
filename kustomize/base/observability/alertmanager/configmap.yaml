@@ -1,0 +1,136 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: greenfield
+  labels:
+    app: alertmanager
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+    
+    # Route configuration with environment awareness
+    route:
+      group_by: ['alertname', 'cluster', 'service', 'namespace']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'default'
+      
+      routes:
+        # Route for low-traffic environments (dev/staging)
+        # These alerts are silenced or sent to a different channel
+        - match:
+            traffic: low
+          receiver: 'low-traffic'
+          continue: false
+        
+        # Critical production alerts
+        - match:
+            severity: critical
+            environment: production
+          receiver: 'critical-production'
+          group_wait: 10s
+          repeat_interval: 1h
+        
+        # Warning production alerts
+        - match:
+            severity: warning
+            environment: production
+          receiver: 'warning-production'
+          group_wait: 30s
+          repeat_interval: 4h
+        
+        # Non-production critical alerts (relaxed thresholds)
+        - match:
+            severity: critical
+          receiver: 'critical-non-production'
+          group_wait: 5m
+          repeat_interval: 12h
+        
+        # Non-production warnings (even more relaxed)
+        - match:
+            severity: warning
+          receiver: 'warning-non-production'
+          group_wait: 30m
+          repeat_interval: 24h
+    
+    # Inhibit rules to prevent alert storms
+    inhibit_rules:
+      # Inhibit warning alerts when critical alert is firing for same resource
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'namespace', 'pod', 'container']
+      
+      # Don't alert on application SLO issues if the application is down
+      - source_match:
+          alertname: 'ApplicationDown'
+        target_match_re:
+          alertname: '(HighApplicationErrorRate|HighApplicationLatencyP95|ApplicationErrorBudgetExhausted)'
+        equal: ['job', 'namespace']
+      
+      # Don't alert on pod issues if node is not ready
+      - source_match:
+          alertname: 'NodeNotReady'
+        target_match_re:
+          alertname: '(HighPod.*|PodRestart.*)'
+        equal: ['node']
+    
+    receivers:
+      # Default receiver - logs only
+      - name: 'default'
+        # webhook_configs:
+        #   - url: 'http://localhost:5001/'
+      
+      # Low traffic environment - minimal alerting
+      - name: 'low-traffic'
+        # This receiver can be configured to send to a low-priority channel
+        # or simply log without sending notifications
+        # webhook_configs:
+        #   - url: 'http://localhost:5001/low-traffic'
+      
+      # Critical production alerts - immediate notification
+      - name: 'critical-production'
+        # Configure your notification channels here
+        # Examples:
+        # slack_configs:
+        #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        #     channel: '#alerts-critical'
+        #     title: '[CRITICAL] {{ .GroupLabels.alertname }}'
+        #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        # 
+        # pagerduty_configs:
+        #   - service_key: 'YOUR_PAGERDUTY_KEY'
+        #     description: '{{ .GroupLabels.alertname }}'
+        # 
+        # email_configs:
+        #   - to: 'oncall@example.com'
+        #     from: 'alertmanager@example.com'
+        #     smarthost: 'smtp.example.com:587'
+        #     auth_username: 'alertmanager@example.com'
+        #     auth_password: 'password'
+      
+      # Warning production alerts
+      - name: 'warning-production'
+        # slack_configs:
+        #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        #     channel: '#alerts-warning'
+        #     title: '[WARNING] {{ .GroupLabels.alertname }}'
+        #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+      
+      # Critical non-production alerts
+      - name: 'critical-non-production'
+        # slack_configs:
+        #   - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        #     channel: '#alerts-dev'
+        #     title: '[DEV-CRITICAL] {{ .GroupLabels.alertname }}'
+        #     text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+      
+      # Warning non-production alerts
+      - name: 'warning-non-production'
+        # Minimal alerting for warnings in non-prod
+        # webhook_configs:
+        #   - url: 'http://localhost:5001/non-prod-warning'

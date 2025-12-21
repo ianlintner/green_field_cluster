@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-application-slo-rules
+  namespace: greenfield
+  labels:
+    app: prometheus
+    component: slo-rules
+data:
+  application-slos.yml: |
+    groups:
+      - name: application_slos
+        interval: 30s
+        rules:
+          # Application Request Success Rate SLO (Error Budget)
+          # Target: 99.9% success rate (0.1% error budget)
+          - record: http:requests:success_ratio_rate5m
+            expr: |
+              sum(rate(http_requests_total{status!~"5.."}[5m])) by (app, namespace)
+              /
+              sum(rate(http_requests_total[5m])) by (app, namespace)
+          
+          - record: http:requests:success_ratio_rate30m
+            expr: |
+              sum(rate(http_requests_total{status!~"5.."}[30m])) by (app, namespace)
+              /
+              sum(rate(http_requests_total[30m])) by (app, namespace)
+          
+          - record: http:requests:success_ratio_rate1h
+            expr: |
+              sum(rate(http_requests_total{status!~"5.."}[1h])) by (app, namespace)
+              /
+              sum(rate(http_requests_total[1h])) by (app, namespace)
+          
+          # Error Budget Remaining (per app)
+          # 99.9% SLO = 0.1% error budget
+          - record: http:requests:error_budget_remaining
+            expr: |
+              (0.001 - (1 - http:requests:success_ratio_rate30m)) / 0.001
+          
+          # Application Latency Percentiles
+          - record: http:request:duration:p50_rate5m
+            expr: |
+              histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (app, namespace, le))
+          
+          - record: http:request:duration:p95_rate5m
+            expr: |
+              histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (app, namespace, le))
+          
+          - record: http:request:duration:p99_rate5m
+            expr: |
+              histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (app, namespace, le))
+          
+          # Traffic Volume (requests per second)
+          - record: http:requests:rate5m
+            expr: |
+              sum(rate(http_requests_total[5m])) by (app, namespace)
+          
+          - record: http:requests:rate1h
+            expr: |
+              sum(rate(http_requests_total[1h])) by (app, namespace)
+          
+          # Application Saturation Metrics
+          # Pod CPU Saturation
+          - record: pod:cpu:saturation
+            expr: |
+              sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod, namespace)
+              /
+              sum(container_spec_cpu_quota{container!=""}/container_spec_cpu_period{container!=""}) by (pod, namespace)
+          
+          # Pod Memory Saturation
+          - record: pod:memory:saturation
+            expr: |
+              sum(container_memory_working_set_bytes{container!=""}) by (pod, namespace)
+              /
+              sum(container_spec_memory_limit_bytes{container!=""}) by (pod, namespace)
+          
+          # Application Uptime
+          - record: app:uptime:seconds
+            expr: |
+              time() - process_start_time_seconds
+          
+          # Pod Restarts (high restart rate indicates issues)
+          - record: pod:restarts:rate1h
+            expr: |
+              rate(kube_pod_container_status_restarts_total[1h])
